@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAppContext } from '@/context/AppContext';
 
 export interface AppNavbarProps {
@@ -16,6 +18,7 @@ export function AppNavbar({ userName, role }: AppNavbarProps) {
     handleRemediationResolved,
   } = useAppContext();
 
+  const pathname = usePathname();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [lastActionMessage, setLastActionMessage] = useState<string | null>(null);
 
@@ -64,6 +67,29 @@ export function AppNavbar({ userName, role }: AppNavbarProps) {
 
           {/* Right: Persona Switcher */}
           <div className="flex items-center space-x-3">
+
+            {/* Nav links */}
+            <nav className="hidden sm:flex items-center gap-1">
+              {[
+                { label: 'Dashboard', href: '/dashboard' },
+                { label: 'Analytics', href: '/analytics' },
+              ].map(({ label, href }) => {
+                const active = pathname === href;
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                      active
+                        ? 'bg-[#3368A0] text-white'
+                        : 'text-[#3368A0] hover:bg-[#C8DFDB]/40'
+                    }`}
+                  >
+                    {label}
+                  </Link>
+                );
+              })}
+            </nav>
             <div className="relative z-50">
               <button
                 type="button"
