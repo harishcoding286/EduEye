@@ -1,0 +1,70 @@
+{
+  "student": {
+    "id": "stu_ram_001",
+    "name": "Ram",
+    "rollNumber": "21CS047",
+    "semester": 5,
+    "academicYear": "2025-26",
+    "branch": "Computer Science & Engineering",
+    "totalWorkingDays": 90,
+    "daysAttended": 78
+  },
+  "subjects": [
+    {
+      "id": "sub_la",
+      "code": "MA5001",
+      "name": "Linear Algebra",
+      "credits": 4,
+      "faculty": "Dr. Priya Mohan",
+      "cat1Score": 34,
+      "cat2Score": 18,
+      "maxCATScore": 50,
+      "totalAssignments": 8,
+      "submittedOnTime": 6,
+      "keyTopics": ["Matrix Operations", "Eigenvalues & Eigenvectors", "Vector Spaces", "Linear Transformations"],
+      "conceptWeaknesses": ["Eigenvalue decomposition", "Null space & column space", "Orthogonality"]
+    },
+    {
+      "id": "sub_os",
+      "code": "CS5002",
+      "name": "Operating Systems",
+      "credits": 4,
+      "faculty": "Prof. Karthik Srinivasan",
+      "cat1Score": 41,
+      "cat2Score": 44,
+      "maxCATScore": 50,
+      "totalAssignments": 6,
+      "submittedOnTime": 6,
+      "keyTopics": ["Process Scheduling", "Memory Management", "File Systems", "Deadlocks"],
+      "conceptWeaknesses": []
+    },
+    {
+      "id": "sub_ds",
+      "code": "CS5003",
+      "name": "Data Structures",
+      "credits": 4,
+      "faculty": "Dr. Anand Rajagopalan",
+      "cat1Score": 38,
+      "cat2Score": 43,
+      "maxCATScore": 50,
+      "totalAssignments": 10,
+      "submittedOnTime": 9,
+      "keyTopics": ["Trees & Graphs", "Hashing", "Sorting Algorithms", "Dynamic Programming"],
+      "conceptWeaknesses": ["Graph traversal (DFS/BFS)", "AVL tree rotations"]
+    },
+    {
+      "id": "sub_cn",
+      "code": "CS5004",
+      "name": "Computer Networks",
+      "credits": 3,
+      "faculty": "Prof. Deepa Nair",
+      "cat1Score": 36,
+      "cat2Score": 40,
+      "maxCATScore": 50,
+      "totalAssignments": 7,
+      "submittedOnTime": 7,
+      "keyTopics": ["TCP/IP Stack", "Routing Algorithms", "Network Security", "Application Layer Protocols"],
+      "conceptWeaknesses": ["Subnetting", "Routing protocols (OSPF, BGP)"]
+    }
+  ]
+}
