@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useMemo, useCallback } from
 import type { Role, StudentProfile, AuditLog, CalendarEvent } from '@/types';
 import { initialStudent, initialCohort, initialAuditLogs } from '@/data/seedData';
 import { findOptimalStudySlot } from '@/engine/cognitiveScheduler';
+import { dispatchLMSWebhook, triggerTAEscalation } from '@/services/apiClient';
 
 export interface AppContextValue {
   // Role switching
@@ -84,6 +85,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     async (studentId: string = 'std_101', topic: string = 'Eigenvectors', score: number = 38) => {
       // 1. Trigger 400ms loading overlay
       setIsAnalyzingLoad(true);
+
+      // Asynchronously notify backend LMS webhook
+      dispatchLMSWebhook(topic, score).catch(() => {});
+
       await new Promise((resolve) => setTimeout(resolve, 400));
       setIsAnalyzingLoad(false);
 
@@ -239,6 +244,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         actionType: 'TA_ESCALATED',
         description: `Faculty Advisor dispatched direct TA intervention invite for ${target.name}. Dedicated focus session locked to calendar.`,
       };
+
+      // Asynchronously trigger Resend / SendGrid TA escalation in backend
+      triggerTAEscalation(target.name, studentId, 'Prerequisite Triage', target.predictedGrade).catch(() => {});
 
       setCohort((prevCohort) =>
         prevCohort.map((s) =>

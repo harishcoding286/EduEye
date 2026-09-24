@@ -60,3 +60,45 @@ body {
       0 8px 24px rgba(16, 185, 129, 0.32);
   }
 }
+
+/* FullCalendar Frutiger Aero Theme */
+.fullcalendar-aero-container .fc {
+  font-family: inherit;
+}
+.fullcalendar-aero-container .fc-toolbar-title {
+  font-size: 1rem !important;
+  font-weight: 800 !important;
+  color: #1e293b;
+}
+.fullcalendar-aero-container .fc-button {
+  background: rgba(255, 255, 255, 0.85) !important;
+  color: #334155 !important;
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  border-radius: 0.75rem !important;
+  font-weight: 700 !important;
+  font-size: 0.75rem !important;
+  padding: 0.25rem 0.65rem !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+  text-transform: capitalize !important;
+}
+.fullcalendar-aero-container .fc-button:hover {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+.fullcalendar-aero-container .fc-button-active {
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%) !important;
+  color: #ffffff !important;
+}
+.fullcalendar-aero-container .fc-event {
+  border-radius: 0.75rem !important;
+  padding: 2px 6px !important;
+  font-weight: 700 !important;
+  font-size: 0.75rem !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+  cursor: pointer !important;
+  transition: transform 0.15s ease !important;
+}
+.fullcalendar-aero-container .fc-event:hover {
+  transform: scale(1.02) !important;
+}
+

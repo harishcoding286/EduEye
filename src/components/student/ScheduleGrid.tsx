@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import type { CalendarEvent } from '@/types';
+import { FullCalendarView } from './FullCalendarView';
 
 export interface ScheduleGridProps {
   events: CalendarEvent[];
@@ -20,6 +21,8 @@ function formatTime(isoString: string): string {
 }
 
 export const ScheduleGrid: React.FC<ScheduleGridProps> = ({ events, onEventClick }) => {
+  const [viewMode, setViewMode] = useState<'FLUID' | 'FULLCALENDAR'>('FLUID');
+
   const sortedEvents = [...events].sort(
     (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
   );
@@ -44,22 +47,55 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({ events, onEventClick
           </p>
         </div>
 
-        {/* Cute Legend */}
-        <div className="flex items-center gap-3 text-xs font-black">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 shadow-sm">
-            <span>🎒</span> Class
-          </span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-slate-600 shadow-sm">
-            <span>☕</span> Personal
-          </span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 shadow-sm">
-            <span>⚡</span> Focus Sprint
-          </span>
+        {/* View Switcher & Cute Legend */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="inline-flex rounded-2xl bg-white/90 p-1 border border-white shadow-sm text-xs">
+            <button
+              type="button"
+              onClick={() => setViewMode('FLUID')}
+              className={`px-3 py-1 rounded-xl font-black transition-all cursor-pointer ${
+                viewMode === 'FLUID'
+                  ? 'bg-gradient-to-r from-sky-400 to-blue-500 text-white shadow-sm'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              🫧 Timeline
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('FULLCALENDAR')}
+              className={`px-3 py-1 rounded-xl font-black transition-all cursor-pointer ${
+                viewMode === 'FULLCALENDAR'
+                  ? 'bg-gradient-to-r from-sky-400 to-blue-500 text-white shadow-sm'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              📅 FullCalendar.js
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs font-black">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 shadow-sm">
+              <span>🎒</span> Class
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-slate-600 shadow-sm">
+              <span>☕</span> Rest
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 shadow-sm">
+              <span>⚡</span> Focus
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Spacious Event Timeline */}
-      <div className="space-y-4 overflow-y-auto pr-1 flex-1">
+      {/* Conditional View Rendering: FullCalendar.js or Fluid Timeline */}
+      {viewMode === 'FULLCALENDAR' ? (
+        <div className="flex-1 overflow-y-auto">
+          <FullCalendarView events={events} onEventClick={onEventClick} />
+        </div>
+      ) : (
+        /* Spacious Event Timeline */
+        <div className="space-y-4 overflow-y-auto pr-1 flex-1">
         {sortedEvents.length === 0 ? (
           <div className="py-20 text-center text-slate-400 text-sm font-bold">
             No events scheduled for today. Time to relax! 🌈
@@ -210,6 +246,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({ events, onEventClick
           })
         )}
       </div>
+      )}
 
       {/* Hourly Reference Markers */}
       <div className="pt-5 border-t border-slate-200/60 mt-5">
