@@ -25,99 +25,118 @@ export const StudentHealthCard: React.FC<StudentHealthCardProps> = ({
 
   const tierBadgeConfig = {
     OPTIMAL: {
-      text: 'Optimal Standing',
-      style: 'bg-emerald-100/80 text-emerald-800 border-emerald-300/60',
+      text: 'Optimal Standing 🌟',
+      style: 'bg-emerald-100/90 text-emerald-800 border-emerald-300/70 shadow-[0_2px_8px_rgba(16,185,129,0.2)]',
       dot: 'bg-emerald-500',
     },
     REMEDIATING: {
-      text: 'Remediating Gaps',
-      style: 'bg-amber-100/80 text-amber-800 border-amber-300/60',
+      text: 'Catching Up 🚀',
+      style: 'bg-amber-100/90 text-amber-800 border-amber-300/70 shadow-[0_2px_8px_rgba(245,158,11,0.2)]',
       dot: 'bg-amber-500',
     },
     CRITICAL: {
-      text: 'Critical Intervention',
-      style: 'bg-rose-100/90 text-rose-800 border-rose-300/70 animate-pulse',
+      text: 'Needs Focus Sprint ⚡',
+      style: 'bg-rose-100/90 text-rose-800 border-rose-300/80 animate-pulse shadow-[0_2px_8px_rgba(244,63,94,0.2)]',
       dot: 'bg-rose-500',
     },
   }[riskTier];
 
   return (
-    <div className="flex flex-col gap-8 w-full">
+    <div className="flex flex-col gap-6 w-full">
       {/* ── CARD 1: Hero Predicted Score & Attendance ── */}
-      <div className="bg-white/65 backdrop-blur-2xl border border-white/80 shadow-[0_16px_40px_-12px_rgba(0,120,255,0.08)] rounded-3xl p-8 flex flex-col gap-6">
+      <div className="rounded-[2rem] bg-white/75 backdrop-blur-2xl border-2 border-white/95 shadow-[0_16px_40px_rgba(147,197,253,0.2),inset_0_2px_4px_rgba(255,255,255,0.95)] p-7 flex flex-col gap-5 relative overflow-hidden">
+        {/* Specular Sheen */}
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-white/90 to-transparent pointer-events-none" />
+
         {/* Student Identity Bar */}
         <div className="flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-bold tracking-wider uppercase text-slate-400 block mb-0.5">
-              Enrolled Student
-            </span>
-            <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
-              {profile.name}
-            </h2>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-200 to-indigo-100 border border-white shadow-inner flex items-center justify-center text-xl">
+              🎓
+            </div>
+            <div>
+              <span className="text-[10px] font-black tracking-wider uppercase text-slate-400 block">
+                Student Profile 🫧
+              </span>
+              <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                {profile.name}
+              </h2>
+            </div>
           </div>
           <span
-            className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full border ${tierBadgeConfig.style}`}
+            className={`inline-flex items-center gap-1.5 text-xs font-black px-3.5 py-1.5 rounded-full border ${tierBadgeConfig.style}`}
           >
-            <span className={`w-1.5 h-1.5 rounded-full ${tierBadgeConfig.dot}`} />
+            <span className={`w-2 h-2 rounded-full ${tierBadgeConfig.dot}`} />
             {tierBadgeConfig.text}
           </span>
         </div>
 
-        {/* High-Gloss 3D Liquid Droplet / Orb for Predicted Score */}
+        {/* High-Gloss 3D Juicy Liquid Glass Bubble for Predicted Score */}
         <div
-          className={`relative overflow-hidden rounded-3xl p-7 transition-all duration-500 border ${
+          className={`relative overflow-hidden rounded-[1.8rem] p-6 transition-all duration-500 border-2 ${
             isOptimal
-              ? 'bg-gradient-to-br from-white/95 via-emerald-500/10 to-emerald-400/20 border-emerald-300/60 shadow-[inset_0_2px_4px_rgba(255,255,255,0.9),0_16px_36px_-6px_rgba(16,185,129,0.22)]'
+              ? 'bg-gradient-to-br from-white/95 via-emerald-100/40 to-teal-100/50 border-emerald-300/80 shadow-[inset_0_2px_4px_rgba(255,255,255,0.95),0_12px_28px_rgba(16,185,129,0.18)]'
               : isCritical
-              ? 'bg-gradient-to-br from-white/95 via-rose-500/15 to-rose-400/25 border-rose-300/70 shadow-[inset_0_2px_4px_rgba(255,255,255,0.9),0_16px_36px_-6px_rgba(244,63,94,0.3)] animate-pulse'
-              : 'bg-gradient-to-br from-white/95 via-amber-500/10 to-amber-400/20 border-amber-300/60 shadow-[inset_0_2px_4px_rgba(255,255,255,0.9),0_16px_36px_-6px_rgba(245,158,11,0.22)]'
+              ? 'bg-gradient-to-br from-white/95 via-rose-100/50 to-pink-100/60 border-rose-300/80 shadow-[inset_0_2px_4px_rgba(255,255,255,0.95),0_12px_28px_rgba(244,63,94,0.22)]'
+              : 'bg-gradient-to-br from-white/95 via-amber-100/40 to-yellow-100/50 border-amber-300/80 shadow-[inset_0_2px_4px_rgba(255,255,255,0.95),0_12px_28px_rgba(245,158,11,0.18)]'
           }`}
         >
           {/* Top Liquid Specular Reflection */}
-          <div className="absolute top-0 inset-x-0 h-10 bg-gradient-to-b from-white/70 to-transparent pointer-events-none rounded-t-3xl" />
+          <div className="absolute top-0 inset-x-0 h-10 bg-gradient-to-b from-white/80 to-transparent pointer-events-none rounded-t-[1.8rem]" />
 
-          <div className="flex items-center justify-between text-xs font-bold tracking-wider uppercase text-slate-500 mb-2">
-            <span>Predicted Course Mastery</span>
-            <span className="font-mono text-[10px] text-slate-400">ML PROJECTION</span>
+          <div className="flex items-center justify-between text-xs font-black tracking-wide uppercase text-slate-600 mb-1">
+            <span className="flex items-center gap-1.5">
+              <span>{isOptimal ? '🌟' : isCritical ? '⚠️' : '⚡'}</span> Grade Forecast
+            </span>
+            <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-white/90 border border-slate-200/80 text-slate-500 shadow-sm">
+              Live AI Projection ☁️
+            </span>
           </div>
 
           <div className="flex items-baseline gap-3 my-2">
             <span className={`text-6xl font-black tracking-tight ${gradeTextColor} drop-shadow-sm`}>
               {predictedGrade}%
             </span>
-            <span className="text-xs font-semibold text-slate-600">
+            <span className="text-xs font-bold text-slate-600">
               {isOptimal
-                ? 'On track for Honors'
+                ? 'Cruising comfortably towards an A! ✨'
                 : isCritical
-                ? 'Automatic focus locks dispatched'
-                : 'Deficit remediation active'}
+                ? 'Focus block scheduled to boost your grade! 🎯'
+                : 'Deficit drill ready to level up! 🚀'}
             </span>
           </div>
 
-          {/* Liquid Progress Bar */}
-          <div className="w-full bg-slate-200/80 h-2.5 rounded-full overflow-hidden mt-4 p-[1px] shadow-inner">
+          {/* Liquid Glossy Progress Bar */}
+          <div className="w-full bg-slate-200/70 h-3 rounded-full overflow-hidden mt-3 p-[2px] shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)]">
             <div
-              className={`h-full rounded-full transition-all duration-700 shadow-sm ${
+              className={`h-full rounded-full transition-all duration-700 shadow-sm relative overflow-hidden ${
                 isOptimal
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
+                  ? 'bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500'
                   : isCritical
-                  ? 'bg-gradient-to-r from-rose-500 to-rose-600'
-                  : 'bg-gradient-to-r from-amber-500 to-amber-400'
+                  ? 'bg-gradient-to-r from-rose-400 via-pink-500 to-rose-500'
+                  : 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500'
               }`}
               style={{ width: `${Math.min(100, Math.max(0, predictedGrade))}%` }}
-            />
+            >
+              {/* Highlight sheen inside the bar */}
+              <div className="absolute top-0 inset-x-0 h-1 bg-white/60 rounded-full" />
+            </div>
           </div>
         </div>
 
         {/* Attendance Metric */}
-        <div className="pt-2">
+        <div className="pt-1">
           <div className="flex justify-between items-center text-xs mb-2">
-            <span className="text-slate-600 font-medium">Session Attendance &amp; Engagement</span>
-            <span className="font-bold text-slate-800">{attendanceRate}%</span>
+            <span className="text-slate-700 font-bold flex items-center gap-1.5">
+              <span>🎒</span> Class Attendance &amp; Energy
+            </span>
+            <span className="font-black text-slate-900 text-xs px-2 py-0.5 rounded-lg bg-sky-100/80 text-sky-800 border border-sky-200/70">
+              {attendanceRate}%
+            </span>
           </div>
-          <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+          <div className="w-full bg-slate-200/70 h-2.5 rounded-full overflow-hidden p-[1px]">
             <div
-              className="h-full bg-slate-700 rounded-full transition-all duration-500"
+              className="h-full bg-gradient-to-r from-sky-400 to-blue-500 rounded-full transition-all duration-500 shadow-sm"
               style={{ width: `${attendanceRate}%` }}
             />
           </div>
@@ -125,44 +144,50 @@ export const StudentHealthCard: React.FC<StudentHealthCardProps> = ({
       </div>
 
       {/* ── CARD 2: Active Concept Deficits ── */}
-      <div className="bg-white/65 backdrop-blur-2xl border border-white/80 shadow-[0_16px_40px_-12px_rgba(0,120,255,0.08)] rounded-3xl p-7 flex flex-col gap-4">
+      <div className="rounded-[2rem] bg-white/75 backdrop-blur-2xl border-2 border-white/95 shadow-[0_16px_40px_rgba(147,197,253,0.2),inset_0_2px_4px_rgba(255,255,255,0.95)] p-7 flex flex-col gap-4 relative overflow-hidden">
+        {/* Specular Sheen */}
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-white/90 to-transparent pointer-events-none" />
+
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Prerequisite Concept Health
+          <h3 className="text-xs font-black uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+            <span>💡</span> Prerequisite Power-Up
           </h3>
-          <span className="text-[11px] font-mono text-slate-400">
-            {activeDeficits.length} Active Flag(s)
+          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200/60">
+            {activeDeficits.length === 0 ? '✨ Clear' : `${activeDeficits.length} Need Review`}
           </span>
         </div>
 
         {activeDeficits.length === 0 ? (
-          <div className="py-4 px-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/60 text-xs text-emerald-800 flex items-center gap-3">
-            <span className="w-6 h-6 rounded-full bg-emerald-200/80 text-emerald-800 flex items-center justify-center font-bold text-xs shrink-0">
-              ✓
+          <div className="py-4 px-4 rounded-2xl bg-gradient-to-r from-emerald-50/90 to-teal-50/90 border border-emerald-200/70 text-xs text-emerald-900 flex items-center gap-3 shadow-sm">
+            <span className="w-8 h-8 rounded-2xl bg-emerald-200/80 text-emerald-800 flex items-center justify-center font-black text-sm shrink-0 shadow-inner">
+              🌸
             </span>
-            <span className="font-medium">
-              Zero conceptual bottlenecks detected across all prerequisite modules.
-            </span>
+            <div>
+              <div className="font-black text-emerald-950">You're completely on track! ✨</div>
+              <div className="text-emerald-700 font-medium text-[11px] mt-0.5">
+                Zero concept gaps detected. Keep cruising through the term!
+              </div>
+            </div>
           </div>
         ) : (
           <div className="space-y-3">
             {activeDeficits.map((deficit) => (
               <div
                 key={deficit}
-                className="p-4 rounded-2xl bg-rose-50/80 border border-rose-200/80 text-rose-900 flex items-start gap-3.5"
+                className="p-4 rounded-2xl bg-gradient-to-r from-rose-50/90 via-pink-50/80 to-amber-50/80 border-2 border-rose-200/90 text-rose-900 flex items-start gap-3.5 shadow-sm"
               >
-                <div className="w-7 h-7 rounded-xl bg-rose-200 text-rose-800 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                  !
+                <div className="w-8 h-8 rounded-2xl bg-rose-200 text-rose-800 flex items-center justify-center text-sm font-black shrink-0 mt-0.5 shadow-inner">
+                  🎯
                 </div>
                 <div>
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-rose-700">
-                    Autonomous Calendar Lock Triggered
+                  <div className="text-[10px] font-black uppercase tracking-wider text-rose-600 flex items-center gap-1">
+                    <span>⚡</span> 45-Min Focus Drill Auto-Scheduled
                   </div>
-                  <div className="text-sm font-extrabold capitalize text-slate-900 mt-0.5">
+                  <div className="text-sm font-black capitalize text-slate-900 mt-0.5">
                     {deficit.replace(/-/g, ' ')}
                   </div>
-                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                    Low assessment confidence mapped to prerequisite concept. Focus sprint scheduled to prevent mid-term failure.
+                  <p className="text-xs text-slate-600 mt-1 leading-relaxed font-medium">
+                    A quick 3-question micro-drill will get you right back to an A! 🎯 Click the focus sprint block on your calendar to start.
                   </p>
                 </div>
               </div>
@@ -172,12 +197,15 @@ export const StudentHealthCard: React.FC<StudentHealthCardProps> = ({
       </div>
 
       {/* ── CARD 3: Recent Telemetry Submissions ── */}
-      <div className="bg-white/65 backdrop-blur-2xl border border-white/80 shadow-[0_16px_40px_-12px_rgba(0,120,255,0.08)] rounded-3xl p-7 flex flex-col gap-4">
+      <div className="rounded-[2rem] bg-white/75 backdrop-blur-2xl border-2 border-white/95 shadow-[0_16px_40px_rgba(147,197,253,0.2),inset_0_2px_4px_rgba(255,255,255,0.95)] p-7 flex flex-col gap-4 relative overflow-hidden">
+        {/* Specular Sheen */}
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-white/90 to-transparent pointer-events-none" />
+
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Recent Telemetry Submissions
+          <h3 className="text-xs font-black uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+            <span>📝</span> Recent Submissions
           </h3>
-          <span className="text-[11px] text-slate-400 font-mono">Last 3 Assessments</span>
+          <span className="text-[11px] text-slate-400 font-bold">Latest 3 Quizzes</span>
         </div>
 
         <div className="divide-y divide-slate-100/90">
@@ -188,33 +216,34 @@ export const StudentHealthCard: React.FC<StudentHealthCardProps> = ({
             return (
               <div
                 key={asmt.id}
-                className="py-4 flex items-center justify-between first:pt-1 last:pb-1"
+                className="py-3.5 flex items-center justify-between first:pt-1 last:pb-1"
               >
                 <div className="min-w-0 pr-3">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wide block">
                     {asmt.course}
                   </span>
-                  <div className="text-sm font-bold text-slate-800 truncate mt-0.5">
+                  <div className="text-xs font-black text-slate-800 truncate mt-0.5">
                     {asmt.topic}
                   </div>
-                  <div className="text-xs text-slate-500 mt-0.5">
-                    Submission Lag: <span className={isHighLag ? 'text-amber-600 font-semibold' : 'text-slate-600'}>
+                  <div className="text-[11px] text-slate-500 mt-0.5 font-medium">
+                    Lag: <span className={isHighLag ? 'text-amber-600 font-bold' : 'text-slate-600'}>
                       {asmt.actualLagHours}h
                     </span>{' '}
-                    <span className="text-slate-400 font-normal">(Target: {asmt.expectedLagHours}h)</span>
+                    <span className="text-slate-400 font-normal">(Goal: {asmt.expectedLagHours}h)</span>
                   </div>
                 </div>
 
                 <div className="shrink-0 text-right">
                   <span
-                    className={`inline-block text-xs font-extrabold px-3 py-1 rounded-xl ${
+                    className={`inline-block text-xs font-black px-3 py-1.5 rounded-xl border ${
                       scorePct >= 75
-                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-200/60'
+                        ? 'bg-emerald-100 text-emerald-800 border-emerald-200/80 shadow-sm'
                         : scorePct >= 60
-                        ? 'bg-amber-100 text-amber-800 border border-amber-200/60'
-                        : 'bg-rose-100 text-rose-800 border border-rose-200/60'
+                        ? 'bg-amber-100 text-amber-800 border-amber-200/80 shadow-sm'
+                        : 'bg-rose-100 text-rose-800 border-rose-200/80 shadow-sm'
                     }`}
                   >
+                    {scorePct >= 75 ? '🌟 ' : scorePct >= 60 ? '⚡ ' : '💧 '}
                     {asmt.score}/{asmt.maxScore}
                   </span>
                 </div>

@@ -25,84 +25,77 @@ export function AppNavbar({ userName, role }: AppNavbarProps) {
 
   const triggerPopQuiz = async () => {
     await handleGradeDrop('std_101', 'Eigenvectors', 38);
-    setLastActionMessage('Signal Ingested: Pop Quiz Drop (38% Eigenvalues) ➔ Schedule Rewired');
+    setLastActionMessage('🫧 Pop Quiz Telemetry Ingested: 38% in Eigenvalues! Focus block scheduled ✨');
     setTimeout(() => setLastActionMessage(null), 4000);
   };
 
   const triggerResolve = () => {
     handleRemediationResolved('std_101', 100);
-    setLastActionMessage('Diagnostic Resolved: 100% Mastery ➔ Grade Restored to Optimal');
+    setLastActionMessage('🌸 Micro-Drill Completed (100% Mastery)! Predicted grade restored to Optimal! ⭐️');
     setTimeout(() => setLastActionMessage(null), 4000);
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-2xl border-b border-white/80 shadow-[0_4px_30px_rgba(0,120,255,0.04)]">
-      {/* Top Main Navigation Bar */}
-      <div className="max-w-7xl mx-auto px-8">
-        <div className="flex items-center justify-between h-20 gap-6">
-          {/* Left Branding */}
+    <header className="sticky top-2 z-50 w-full px-4 sm:px-8">
+      {/* Floating Frutiger Aero Glass Capsule Navbar */}
+      <div className="max-w-7xl mx-auto rounded-[2rem] bg-white/75 backdrop-blur-2xl border-2 border-white/95 shadow-[0_16px_40px_rgba(96,165,250,0.2),inset_0_2px_4px_rgba(255,255,255,0.9)] overflow-hidden">
+        {/* Specular sheen bar */}
+        <div className="h-1 bg-gradient-to-r from-transparent via-white/90 to-transparent" />
+
+        <div className="px-6 py-3 flex items-center justify-between gap-4">
+          {/* Left Brand: Cute Frutiger Aero Mascot & Wordmark */}
           <div className="flex items-center space-x-3.5">
-            <div className="flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-tr from-sky-400 via-blue-500 to-indigo-500 p-[1.5px] shadow-[0_8px_20px_-4px_rgba(14,165,233,0.3)]">
-              <div className="w-full h-full bg-white/95 rounded-[14px] flex items-center justify-center backdrop-blur-sm">
-                <span className="font-black text-xl text-blue-600">
-                  👁
-                </span>
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-b from-sky-200 via-cyan-300 to-blue-400 p-[2px] shadow-[inset_0_2px_4px_rgba(255,255,255,0.9),0_6px_16px_rgba(56,189,248,0.35)] flex items-center justify-center group hover:scale-105 transition-transform cursor-pointer">
+              <div className="w-full h-full bg-white/80 rounded-[14px] flex items-center justify-center text-2xl backdrop-blur-sm">
+                🫧
               </div>
             </div>
+
             <div>
-              <div className="flex items-center space-x-2.5">
-                <span className="font-extrabold text-xl tracking-tight text-slate-900">
-                  Edu<span className="text-blue-600">Eye</span>
+              <div className="flex items-center space-x-2">
+                <span className="font-black text-2xl tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-pink-500 bg-clip-text text-transparent">
+                  EduEye
                 </span>
-                <span className="hidden sm:inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/60 font-mono tracking-wide">
-                  FlowBuild Autonomous Engine
+                <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-gradient-to-r from-pink-100 to-sky-100 text-slate-700 border border-white/90 shadow-sm">
+                  Study Buddy ✨
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 hidden md:block mt-0.5">
-                Closed-Loop Cognitive Scheduling &amp; Autonomous Gap Remediation
+              <p className="text-[11px] font-semibold text-slate-500 hidden sm:block">
+                Cognitive Schedule &amp; Gap Remediation ☁️
               </p>
             </div>
           </div>
 
-          {/* Center: Global Status Pill */}
+          {/* Center: Cheerful Floating Status Pill */}
           <div className="hidden lg:flex items-center">
-            <div className="inline-flex items-center space-x-2.5 px-4 py-1.5 rounded-full bg-white/80 border border-emerald-400/40 text-emerald-800 text-xs font-semibold shadow-[0_4px_16px_rgba(16,185,129,0.12)] backdrop-blur-md">
-              <span className="relative flex h-2 w-2">
+            <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-white/90 border border-emerald-300/80 text-emerald-700 text-xs font-bold shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),0_4px_12px_rgba(16,185,129,0.18)]">
+              <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
               </span>
-              <span>Autonomous Loop Active</span>
+              <span>Autonomous Engine: Active 🌈</span>
             </div>
           </div>
 
-          {/* Right: Persona Gateway / Switcher */}
-          <div className="flex items-center space-x-4">
+          {/* Right: Persona Gateway & Switcher */}
+          <div className="flex items-center space-x-3">
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setIsDropdownOpen((prev) => !prev)}
-                className="flex items-center space-x-3 px-3.5 py-2 rounded-2xl bg-white/80 hover:bg-white border border-slate-200/80 hover:border-slate-300 transition-all text-left shadow-sm group cursor-pointer"
+                className="flex items-center space-x-2.5 px-3.5 py-2 rounded-2xl bg-white/90 hover:bg-white border border-white shadow-sm hover:shadow transition-all text-left group cursor-pointer"
                 aria-expanded={isDropdownOpen}
               >
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs uppercase bg-blue-50 text-blue-700 border border-blue-200/70 group-hover:scale-105 transition-transform">
-                  {activeRole === 'STUDENT' ? 'AR' : 'SV'}
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm bg-gradient-to-br from-pink-100 to-sky-100 border border-white shadow-inner">
+                  {activeRole === 'STUDENT' ? '🎒' : '👩‍🏫'}
                 </div>
                 <div className="text-left hidden sm:block">
-                  <div className="text-xs font-bold text-slate-800">
-                    {userName ||
-                      (activeRole === 'STUDENT'
-                        ? 'Alex Rivera'
-                        : 'Dr. Sarah Vance')}
+                  <div className="text-xs font-black text-slate-800">
+                    {userName || (activeRole === 'STUDENT' ? 'Alex Rivera' : 'Dr. Sarah Vance')}
                   </div>
-                  <div className="flex items-center space-x-1.5">
-                    <span
-                      className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md ${
-                        activeRole === 'STUDENT'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-emerald-100 text-emerald-700'
-                      }`}
-                    >
-                      {activeRole}
+                  <div className="flex items-center space-x-1">
+                    <span className="text-[10px] font-bold text-blue-600">
+                      {activeRole === 'STUDENT' ? 'Student View 🎒' : 'Teacher View 👩‍🏫'}
                     </span>
                     <span className="text-[10px] text-slate-400">▾</span>
                   </div>
@@ -112,11 +105,11 @@ export function AppNavbar({ userName, role }: AppNavbarProps) {
               {/* Persona Switcher Dropdown */}
               {isDropdownOpen && (
                 <div
-                  className="absolute right-0 mt-2.5 w-64 rounded-2xl bg-white/95 backdrop-blur-2xl border border-white/90 shadow-[0_20px_50px_rgba(0,120,255,0.12)] py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+                  className="absolute right-0 mt-2 w-64 rounded-3xl bg-white/95 backdrop-blur-2xl border-2 border-white shadow-[0_20px_50px_rgba(59,130,246,0.2)] py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 p-1.5"
                   onMouseLeave={() => setIsDropdownOpen(false)}
                 >
-                  <div className="px-4 py-2 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                    Switch Gateway Persona
+                  <div className="px-3.5 py-2 border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                    Switch Gateway Persona 🫧
                   </div>
 
                   <button
@@ -125,20 +118,18 @@ export function AppNavbar({ userName, role }: AppNavbarProps) {
                       setCurrentRole('STUDENT');
                       setIsDropdownOpen(false);
                     }}
-                    className={`w-full text-left px-4 py-2.5 flex items-center justify-between hover:bg-slate-50 transition ${
-                      activeRole === 'STUDENT' ? 'bg-blue-50/60 font-semibold' : ''
+                    className={`w-full text-left px-3.5 py-2.5 rounded-2xl flex items-center justify-between hover:bg-sky-50/80 transition ${
+                      activeRole === 'STUDENT' ? 'bg-sky-100/70 font-bold' : ''
                     }`}
                   >
                     <div>
-                      <div className="text-sm font-semibold text-slate-900 flex items-center gap-1.5">
-                        Alex Rivera
-                        {activeRole === 'STUDENT' && (
-                          <span className="text-blue-600 text-xs">● Active</span>
-                        )}
+                      <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                        Alex Rivera 🎒
+                        {activeRole === 'STUDENT' && <span className="text-blue-500 text-xs">●</span>}
                       </div>
-                      <div className="text-xs text-slate-500">Undergrad Student (CS &amp; Math)</div>
+                      <div className="text-[11px] text-slate-500">Undergrad Student</div>
                     </div>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-semibold">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">
                       STUDENT
                     </span>
                   </button>
@@ -149,20 +140,18 @@ export function AppNavbar({ userName, role }: AppNavbarProps) {
                       setCurrentRole('TEACHER');
                       setIsDropdownOpen(false);
                     }}
-                    className={`w-full text-left px-4 py-2.5 flex items-center justify-between hover:bg-slate-50 transition ${
-                      activeRole === 'TEACHER' ? 'bg-emerald-50/60 font-semibold' : ''
+                    className={`w-full text-left px-3.5 py-2.5 rounded-2xl flex items-center justify-between hover:bg-emerald-50/80 transition ${
+                      activeRole === 'TEACHER' ? 'bg-emerald-100/70 font-bold' : ''
                     }`}
                   >
                     <div>
-                      <div className="text-sm font-semibold text-slate-900 flex items-center gap-1.5">
-                        Dr. Sarah Vance
-                        {activeRole === 'TEACHER' && (
-                          <span className="text-emerald-600 text-xs">● Active</span>
-                        )}
+                      <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                        Dr. Sarah Vance 👩‍🏫
+                        {activeRole === 'TEACHER' && <span className="text-emerald-500 text-xs">●</span>}
                       </div>
-                      <div className="text-xs text-slate-500">Faculty Lead &amp; Course Director</div>
+                      <div className="text-[11px] text-slate-500">Course Director</div>
                     </div>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-semibold">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-bold">
                       TEACHER
                     </span>
                   </button>
@@ -171,54 +160,49 @@ export function AppNavbar({ userName, role }: AppNavbarProps) {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Controller Dock / Demo Action Bar */}
-      <div className="bg-white/40 border-t border-slate-200/60 px-8 py-2.5">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center space-x-2.5">
-            <span className="flex h-2 w-2 rounded-full bg-blue-500"></span>
-            <span className="font-semibold text-slate-700 font-mono tracking-wide uppercase text-[11px]">
-              Demo Controller:
-            </span>
-            <span className="text-slate-500 text-xs hidden md:inline">
-              Simulate closed-loop autonomous telemetry triggers
-            </span>
+        {/* Glossy Candy Controller Bar */}
+        <div className="bg-gradient-to-r from-sky-100/70 via-pink-50/60 to-purple-100/70 border-t border-white/80 px-6 py-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center space-x-2 text-xs font-bold text-slate-700">
+              <span className="text-base">🎮</span>
+              <span>Demo Controls:</span>
+              <span className="text-slate-500 font-medium hidden md:inline">
+                Simulate automatic quiz drops &amp; calendar locks!
+              </span>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              {/* Glossy Gel 3D Amber Button */}
+              <button
+                type="button"
+                onClick={triggerPopQuiz}
+                className="px-4 py-2 rounded-2xl text-xs font-black text-slate-950 transition-all flex items-center gap-1.5 bg-gradient-to-b from-amber-200 via-amber-300 to-amber-400 hover:from-amber-100 hover:to-amber-300 border border-white shadow-[inset_0_2px_3px_rgba(255,255,255,0.9),0_6px_18px_rgba(245,158,11,0.35)] hover:scale-105 active:scale-95 cursor-pointer"
+                title="Drops quiz score to 38% for Alex Rivera"
+              >
+                <span>⚡</span> Simulate LMS Pop Quiz Drop (38% Eigenvalues)
+              </button>
+
+              {/* Glossy Gel 3D Emerald Button */}
+              <button
+                type="button"
+                onClick={triggerResolve}
+                className="px-4 py-2 rounded-2xl text-xs font-black text-emerald-950 transition-all flex items-center gap-1.5 bg-gradient-to-b from-emerald-200 via-emerald-300 to-teal-400 hover:from-emerald-100 hover:to-emerald-300 border border-white shadow-[inset_0_2px_3px_rgba(255,255,255,0.9),0_6px_18px_rgba(16,185,129,0.35)] hover:scale-105 active:scale-95 cursor-pointer"
+                title="Clears deficit and restores grade to 100%"
+              >
+                <span>✨</span> Resolve Diagnostic (100%)
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center space-x-3">
-            {/* High-Gloss 3D Action Button */}
-            <button
-              type="button"
-              onClick={triggerPopQuiz}
-              className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8),0_8px_20px_-4px_rgba(245,158,11,0.35)] ${
-                isAlexAtRisk
-                  ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                  : 'bg-gradient-to-r from-amber-400 via-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 hover:scale-[1.02] active:scale-[0.98]'
-              }`}
-              title="Drops quiz score to 38% for Alex Rivera, triggering autonomous calendar remediation"
-            >
-              <span>⚡</span> Simulate LMS Pop Quiz Drop (38% Eigenvalues)
-            </button>
-
-            <button
-              type="button"
-              onClick={triggerResolve}
-              className="px-4 py-2 rounded-2xl bg-white/80 hover:bg-white text-emerald-700 hover:text-emerald-800 border border-emerald-300/80 font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm hover:scale-[1.02] active:scale-[0.98]"
-              title="Resolves diagnostic drill and clears deficit for Alex Rivera"
-            >
-              <span>✓</span> Resolve Diagnostic (100%)
-            </button>
-          </div>
+          {/* Toast Message */}
+          {lastActionMessage && (
+            <div className="mt-2 text-xs font-bold text-indigo-700 flex items-center gap-2 animate-in fade-in duration-200 bg-white/80 px-3.5 py-1.5 rounded-full border border-white/90 shadow-sm w-fit">
+              <span>💫</span>
+              <span>{lastActionMessage}</span>
+            </div>
+          )}
         </div>
-
-        {/* Temporary Feedback Toast */}
-        {lastActionMessage && (
-          <div className="max-w-7xl mx-auto mt-2 text-xs text-blue-700 font-medium flex items-center gap-2 animate-in fade-in duration-200">
-            <span>ℹ</span>
-            <span>{lastActionMessage}</span>
-          </div>
-        )}
       </div>
     </header>
   );

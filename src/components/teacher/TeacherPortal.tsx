@@ -16,52 +16,55 @@ export function TeacherPortal() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-8 py-10 min-h-screen flex flex-col gap-8">
-      {/* Cockpit Header Banner: Liquid Glass Material */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/65 backdrop-blur-2xl p-8 rounded-3xl border border-white/80 shadow-[0_16px_40px_-12px_rgba(0,120,255,0.08)]">
+    <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8 min-h-screen flex flex-col gap-6">
+      {/* Cockpit Header Banner: Cute Frutiger Aero Glass Capsule */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 rounded-[2.2rem] bg-white/75 backdrop-blur-2xl p-7 border-2 border-white/95 shadow-[0_16px_40px_rgba(147,197,253,0.2),inset_0_2px_4px_rgba(255,255,255,0.95)] relative overflow-hidden">
+        {/* Specular sheen */}
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-white/90 to-transparent pointer-events-none" />
+
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 bg-blue-100/60 px-3 py-0.5 rounded-full border border-blue-200/50">
-              Faculty &amp; Advisor Cockpit
+            <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 bg-blue-100/80 px-3 py-0.5 rounded-full border border-blue-200 shadow-sm flex items-center gap-1">
+              <span>👩‍🏫</span> Faculty &amp; Advisor Cockpit
             </span>
-            <span className="text-xs text-slate-400 font-mono">
-              Term 2026-Q3
+            <span className="text-xs text-slate-400 font-mono font-bold">
+              Term 2026-Q3 🫧
             </span>
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
             Linear Algebra &amp; Discrete Structures (MATH-204)
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Course Director: <span className="font-semibold text-slate-700">Dr. Sarah Vance</span> • 
-            Autonomous closed-loop student remediation active across all enrolled cohorts
+          <p className="text-xs font-semibold text-slate-500 mt-1">
+            Course Director: <span className="font-black text-slate-700">Dr. Sarah Vance</span> • 
+            Autonomous closed-loop student remediation active across all enrolled cohorts ☁️
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3.5">
-          <div className="px-4 py-2.5 rounded-2xl bg-white/80 border border-slate-200/70 text-xs shadow-sm">
-            <span className="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">
-              Current Focus Student
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="px-4 py-2 rounded-2xl bg-white/90 border border-white text-xs shadow-sm">
+            <span className="text-slate-400 block text-[9px] uppercase font-black tracking-wider">
+              Focus Student 🎯
             </span>
-            <span className="font-extrabold text-slate-900">
-              {currentStudent.name} ({currentStudent.predictedGrade}% predicted)
+            <span className="font-black text-slate-900">
+              {currentStudent.name} ({currentStudent.predictedGrade}%)
             </span>
           </div>
 
-          <div className="px-3.5 py-2.5 rounded-2xl bg-emerald-50/80 border border-emerald-200/70 text-emerald-800 text-xs font-bold flex items-center gap-2 shadow-sm">
+          <div className="px-3.5 py-2 rounded-2xl bg-emerald-100/90 border border-emerald-300 text-emerald-900 text-xs font-black flex items-center gap-2 shadow-sm">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span>
-            Autonomous Schedulers Live
+            Autonomous Schedulers Live ✨
           </div>
         </div>
       </div>
 
       {/* Selected Student Toast */}
       {selectedStudentNotification && (
-        <div className="p-4 bg-blue-50/80 border border-blue-200/80 text-blue-900 rounded-2xl text-xs font-medium animate-in fade-in duration-200 flex items-center justify-between shadow-sm">
-          <span>🎯 {selectedStudentNotification} — Context synchronized across the execution engine.</span>
+        <div className="p-4 bg-sky-50/90 border-2 border-sky-200 text-sky-950 rounded-2xl text-xs font-bold animate-in fade-in duration-200 flex items-center justify-between shadow-sm">
+          <span>🎯 {selectedStudentNotification} — Context synchronized across the execution engine! ✨</span>
           <button
             type="button"
             onClick={() => setSelectedStudentNotification(null)}
-            className="text-blue-400 hover:text-blue-600 font-bold"
+            className="text-sky-500 hover:text-sky-700 font-black cursor-pointer text-sm"
           >
             ✕
           </button>

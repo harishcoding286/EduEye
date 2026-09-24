@@ -137,39 +137,42 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-8 py-10 min-h-screen flex flex-col gap-8">
-      {/* Spacious, Serene Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200/50">
+    <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8 flex flex-col gap-6">
+      {/* Playful Floating Glass Hero Greeting */}
+      <div className="rounded-[2.2rem] bg-white/70 backdrop-blur-2xl border-2 border-white/95 p-7 shadow-[0_16px_40px_rgba(147,197,253,0.22),inset_0_2px_4px_rgba(255,255,255,0.9)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[11px] font-bold tracking-wider uppercase text-blue-600 bg-blue-100/60 px-3 py-0.5 rounded-full border border-blue-200/50">
-              Student Execution Terminal
+            <span className="text-xs font-black px-3 py-1 rounded-full bg-gradient-to-r from-pink-200 via-purple-200 to-sky-200 text-slate-800 border border-white shadow-sm flex items-center gap-1">
+              <span>🌸</span> Welcome Back!
             </span>
-            <span className="text-xs text-slate-400 font-mono">Real-Time Cognitive Feedback</span>
+            <span className="text-xs font-bold text-slate-500 font-mono">Term 2026-Q3 🫧</span>
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-            Academic Health &amp; Dynamic Calendar
+
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <span>Hi Alex!</span>
+            <span className="text-2xl animate-bounce">✨</span>
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Autonomous prerequisite gap isolation with chronobiological focus slot allocation.
+
+          <p className="text-xs font-semibold text-slate-600 mt-1">
+            Your AI study buddy scheduled optimal focus slots and protected your lunch hour! ☁️🥪
           </p>
         </div>
 
-        {/* Header Action Pill */}
+        {/* Quick Quiz Drop Button */}
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={handleSimulateDrop}
-            className="px-4 py-2.5 text-xs font-bold text-slate-800 bg-white/80 hover:bg-white border border-slate-200/80 rounded-2xl transition-all shadow-sm hover:shadow hover:scale-[1.01] active:scale-[0.99]"
+            className="px-4 py-2.5 rounded-2xl text-xs font-extrabold text-slate-800 bg-white/90 hover:bg-white border-2 border-white shadow-[0_6px_16px_rgba(147,197,253,0.25)] hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
           >
-            ⚡ Test Ingestion (Pop Quiz 38%)
+            <span>⚡</span> Test Quiz Drop (38% Eigenvalues)
           </button>
         </div>
       </div>
 
-      {/* Desktop 2-Column Layout (40% / 60%) with gap-8 */}
+      {/* Desktop 2-Column Layout (40% / 60%) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: 3 Clear, Well-Spaced Cards (~40% width -> 5 cols on lg) */}
+        {/* Left Column (~40% width -> 5 cols on lg) */}
         <div className="lg:col-span-5 w-full">
           <StudentHealthCard
             profile={activeProfile}
@@ -177,7 +180,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
           />
         </div>
 
-        {/* Right Column: Spacious Calendar Grid (~60% width -> 7 cols on lg) */}
+        {/* Right Column (~60% width -> 7 cols on lg) */}
         <div className="lg:col-span-7 w-full">
           <ScheduleGrid
             events={activeProfile.calendarEvents}

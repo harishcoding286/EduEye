@@ -75,20 +75,20 @@ export function StudentRosterTable({ onSelectStudent }: StudentRosterTableProps)
     switch (tier) {
       case 'OPTIMAL':
         return (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100/80 text-emerald-800 border border-emerald-300/60">
-            OPTIMAL
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-black bg-emerald-100/90 text-emerald-800 border border-emerald-300/70 shadow-sm">
+            🌟 OPTIMAL
           </span>
         );
       case 'REMEDIATING':
         return (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100/80 text-amber-800 border border-amber-300/60">
-            REMEDIATING
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-black bg-amber-100/90 text-amber-900 border border-amber-300/70 shadow-sm">
+            🚀 REMEDIATING
           </span>
         );
       case 'CRITICAL':
         return (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-rose-100/90 text-rose-800 border border-rose-300/70 animate-pulse">
-            CRITICAL
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-black bg-rose-100/90 text-rose-900 border border-rose-300/80 animate-pulse shadow-sm">
+            ⚡ CRITICAL
           </span>
         );
       default:
@@ -97,24 +97,26 @@ export function StudentRosterTable({ onSelectStudent }: StudentRosterTableProps)
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-emerald-700 font-extrabold';
-    if (score >= 60) return 'text-amber-700 font-extrabold';
-    return 'text-rose-600 font-extrabold';
+    if (score >= 80) return 'text-emerald-700 font-black';
+    if (score >= 60) return 'text-amber-700 font-black';
+    return 'text-rose-600 font-black';
   };
 
   return (
-    <div className="bg-white/65 backdrop-blur-2xl border border-white/80 shadow-[0_16px_40px_-12px_rgba(0,120,255,0.08)] rounded-3xl overflow-hidden flex flex-col">
+    <div className="rounded-[2.2rem] bg-white/75 backdrop-blur-2xl border-2 border-white/95 shadow-[0_16px_40px_rgba(147,197,253,0.2),inset_0_2px_4px_rgba(255,255,255,0.95)] overflow-hidden flex flex-col relative">
+      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-white/90 to-transparent pointer-events-none" />
+
       {/* Table Toolbar */}
       <div className="p-7 border-b border-slate-200/60 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white/40">
         <div>
-          <h2 className="text-lg font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
+          <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
             <span>Student Cohort Telemetry</span>
-            <span className="text-xs bg-slate-200/80 text-slate-700 px-2.5 py-0.5 rounded-full font-bold">
+            <span className="text-xs bg-sky-100 text-sky-800 px-3 py-0.5 rounded-full font-black border border-sky-200/70 shadow-sm">
               {filteredStudents.length} of {cohort.length}
             </span>
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Prioritized in real-time by cognitive risk triage (Critical ➔ Remediating ➔ Optimal)
+          <p className="text-xs font-semibold text-slate-500 mt-0.5">
+            Live cognitive priority queue (Critical ➔ Remediating ➔ Optimal) ☁️
           </p>
         </div>
 
@@ -126,21 +128,21 @@ export function StudentRosterTable({ onSelectStudent }: StudentRosterTableProps)
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search student..."
-              className="text-xs py-2 px-3.5 pl-8 rounded-2xl bg-white/80 border border-slate-200/90 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all shadow-sm"
+              className="text-xs py-2 px-3.5 pl-8 rounded-2xl bg-white/90 border border-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_2px_6px_rgba(0,0,0,0.04)]"
             />
             <span className="absolute left-2.5 top-2.5 text-xs text-slate-400">🔍</span>
           </div>
 
-          <div className="inline-flex rounded-2xl bg-slate-100/90 p-1 border border-slate-200/60 text-xs">
+          <div className="inline-flex rounded-2xl bg-white/80 p-1 border border-white text-xs shadow-sm">
             {['ALL', 'CRITICAL', 'REMEDIATING', 'OPTIMAL'].map((tier) => (
               <button
                 key={tier}
                 type="button"
                 onClick={() => setFilterTier(tier)}
-                className={`px-3 py-1 rounded-xl font-bold transition-all ${
+                className={`px-3 py-1 rounded-xl font-black transition-all cursor-pointer ${
                   filterTier === tier
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-800'
+                    ? 'bg-gradient-to-r from-sky-400 to-blue-500 text-white shadow-sm'
+                    : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
                 {tier}
@@ -277,9 +279,9 @@ export function StudentRosterTable({ onSelectStudent }: StudentRosterTableProps)
                       <button
                         type="button"
                         onClick={(e) => handleDispatchTA(e, student.id)}
-                        className="text-xs font-bold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl border border-blue-200 transition-colors shadow-sm"
+                        className="text-xs font-black text-blue-900 hover:text-blue-950 bg-gradient-to-b from-sky-200 via-sky-300 to-blue-300 hover:from-sky-100 hover:to-sky-200 px-3.5 py-1.5 rounded-xl border border-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),0_4px_12px_rgba(56,189,248,0.25)] transition-all hover:scale-105 active:scale-95 cursor-pointer"
                       >
-                        Dispatch TA →
+                        Dispatch TA ✨
                       </button>
                     </td>
                   </tr>
