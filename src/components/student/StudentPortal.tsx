@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { CalendarEvent, DiagnosticQuiz, StudentProfile } from '@/types';
 import { initialStudent, eigenvectorsQuiz } from '@/data/seedData';
 import { findOptimalStudySlot } from '@/engine/cognitiveScheduler';
@@ -9,24 +9,41 @@ import { ScheduleGrid } from './ScheduleGrid';
 import { RemediationModal } from './RemediationModal';
 
 export interface StudentPortalProps {
+  currentStudent?: StudentProfile;
   profile?: StudentProfile;
   quiz?: DiagnosticQuiz;
   onProfileUpdate?: (updated: StudentProfile) => void;
   onEventClick?: (event: CalendarEvent) => void;
+  findOptimalSlot?: (events: CalendarEvent[], targetDurationMinutes?: number) => { startTime: string; endTime: string };
+  onRemediationResolved?: (score: number) => void;
 }
 
 export const StudentPortal: React.FC<StudentPortalProps> = ({
+  currentStudent,
   profile: propProfile,
   quiz = eigenvectorsQuiz,
   onProfileUpdate,
   onEventClick: propOnEventClick,
+  findOptimalSlot = findOptimalStudySlot,
+  onRemediationResolved,
 }) => {
-  // Local state initialized with props or default seed Alex Rivera
+  const activeIncomingProfile = currentStudent || propProfile;
+
+  // Local state initialized with incoming profile or initialStudent
   const [localProfile, setLocalProfile] = useState<StudentProfile>(() => {
-    return propProfile ? structuredClone(propProfile) : structuredClone(initialStudent);
+    return activeIncomingProfile
+      ? structuredClone(activeIncomingProfile)
+      : structuredClone(initialStudent);
   });
 
-  const activeProfile = propProfile || localProfile;
+  // Keep local state in sync whenever external profile updates
+  useEffect(() => {
+    if (activeIncomingProfile) {
+      setLocalProfile(activeIncomingProfile);
+    }
+  }, [activeIncomingProfile]);
+
+  const activeProfile = activeIncomingProfile || localProfile;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
@@ -53,11 +70,11 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
   // Simulate Pop Quiz Ingestion Drop (38% Eigenvalues)
   const handleSimulateDrop = () => {
     // 1. Autonomous schedule slot calculation
-    const slot = findOptimalStudySlot(activeProfile.calendarEvents, 45);
+    const slot = findOptimalSlot(activeProfile.calendarEvents, 45);
 
     const newRemediationEvent: CalendarEvent = {
       id: `evt_rem_${Date.now()}`,
-      title: 'Eigenvalues & Eigenvectors Remediation Block',
+      title: 'Eigenvalues & Eigenvectors Remediation Lock',
       startTime: slot.startTime,
       endTime: slot.endTime,
       category: 'REMEDIATION_LOCK',
@@ -65,9 +82,9 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
       topic: 'Eigenvalues & Eigenvectors',
     };
 
-    // Filter out previous remediation locks to allow re-testing
+    // Filter out previous remediation locks for this topic to allow re-testing
     const filteredEvents = activeProfile.calendarEvents.filter(
-      e => e.id !== newRemediationEvent.id
+      (e) => !(e.category === 'REMEDIATION_LOCK' && e.status === 'SCHEDULED')
     );
 
     const updatedProfile: StudentProfile = {
@@ -96,12 +113,17 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
     updateProfile(updatedProfile);
   };
 
-  // Handle Diagnostic Quiz Completion (3/3 Mastery)
+  // Handle Diagnostic Quiz Completion (>= 2/3 Mastery)
   const handleQuizComplete = (score: number) => {
     setIsModalOpen(false);
 
-    // Resolve deficit and mark remediation block as COMPLETED
-    const updatedEvents = activeProfile.calendarEvents.map(evt => {
+    // Call centralized context handler if provided
+    if (onRemediationResolved) {
+      onRemediationResolved(score);
+    }
+
+    // Also update local state for self-contained execution
+    const updatedEvents = activeProfile.calendarEvents.map((evt) => {
       if (
         evt.category === 'REMEDIATION_LOCK' ||
         (selectedEvent && evt.id === selectedEvent.id)
@@ -116,7 +138,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
       predictedGrade: 84,
       riskTier: 'OPTIMAL',
       activeDeficits: activeProfile.activeDeficits.filter(
-        d => d !== 'eigenvalues-eigenvectors'
+        (d) => d !== 'eigenvalues-eigenvectors' && d !== 'Eigenvectors'
       ),
       calendarEvents: updatedEvents,
     };
@@ -131,15 +153,15 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold tracking-wider uppercase text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
-              Module 1 · FlowBuild
+              FlowBuild Autonomous Engine
             </span>
-            <span className="text-xs text-slate-400">Isolated Student Runtime</span>
+            <span className="text-xs text-slate-400 font-mono">Student Executive Perspective</span>
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight mt-1">
-            EduEye Student Health & Autonomous Execution Portal
+            EduEye Student Health &amp; Dynamic Calendar
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Cognitive scheduling heuristics with closed-loop prerequisite gap remediation.
+            Real-time cognitive scheduling and closed-loop prerequisite gap remediation.
           </p>
         </div>
 
@@ -148,7 +170,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
           <button
             type="button"
             onClick={handleSimulateDrop}
-            className="px-3.5 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all shadow-sm"
+            className="px-3.5 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all shadow-sm active:scale-95"
           >
             ⚡ Test 60s Trigger (Pop Quiz Drop)
           </button>

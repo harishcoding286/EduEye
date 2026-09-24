@@ -23,9 +23,9 @@ export function AppNavbar({ userName, role }: AppNavbarProps) {
   const activeRole = role ?? currentRole;
   const isAlexAtRisk = currentStudent.riskTier === 'CRITICAL';
 
-  const triggerPopQuiz = () => {
-    handleGradeDrop('std_101', 'Eigenvalues & Eigenvectors', 38);
-    setLastActionMessage('Triggered: Pop Quiz Drop (38% Eigenvalues) -> CRITICAL State');
+  const triggerPopQuiz = async () => {
+    await handleGradeDrop('std_101', 'Eigenvectors', 38);
+    setLastActionMessage('Triggered: LMS Pop Quiz Drop (38% Eigenvalues) -> CRITICAL State');
     setTimeout(() => setLastActionMessage(null), 4000);
   };
 
@@ -197,7 +197,7 @@ export function AppNavbar({ userName, role }: AppNavbarProps) {
               }`}
               title="Drops quiz score to 38% for Alex Rivera, triggering autonomous calendar remediation"
             >
-              <span>⚡</span> Simulate Pop Quiz Drop (38% Eigenvalues)
+              <span>⚡</span> Simulate LMS Pop Quiz Drop (38% Eigenvalues)
             </button>
 
             <button

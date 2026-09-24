@@ -99,7 +99,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({ events, onEventClick
                               : 'bg-amber-200 text-amber-900 animate-pulse'
                           }`}
                         >
-                          {isCompleted ? '✓ Remediated' : '🎯 Focus Sprint'}
+                          {isCompleted ? '✅ Resolved' : '🎯 Focus Sprint'}
                         </span>
                         <span className="text-xs font-mono font-semibold text-slate-600">
                           {startTime} – {endTime}
@@ -120,7 +120,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({ events, onEventClick
                     <div className="shrink-0 text-right">
                       {isCompleted ? (
                         <span className="inline-flex items-center text-xs font-semibold text-emerald-700 bg-emerald-100/80 px-2.5 py-1 rounded-lg">
-                          Score Restored
+                          ✅ Resolved
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-900 bg-amber-200/90 px-3 py-1.5 rounded-lg group-hover:bg-amber-300 transition-colors">

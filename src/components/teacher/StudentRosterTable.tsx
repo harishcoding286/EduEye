@@ -26,6 +26,15 @@ export function StudentRosterTable({ onSelectStudent }: StudentRosterTableProps)
         return matchesQuery && matchesTier;
       })
       .sort((a, b) => {
+        // Triage Risk Priority: CRITICAL (0) > REMEDIATING (1) > OPTIMAL (2)
+        const tierRank: Record<RiskTier, number> = {
+          CRITICAL: 0,
+          REMEDIATING: 1,
+          OPTIMAL: 2,
+        };
+        const rankDiff = tierRank[a.riskTier] - tierRank[b.riskTier];
+        if (rankDiff !== 0) return rankDiff;
+
         const valA = a[sortField];
         const valB = b[sortField];
         if (typeof valA === 'string' && typeof valB === 'string') {
