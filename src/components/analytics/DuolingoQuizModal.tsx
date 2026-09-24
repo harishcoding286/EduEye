@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import type { GeneratedQuiz, QuizQuestion } from '@/types/student-db';
+import { fetchQuizWithRetry } from '@/lib/fetchQuizWithRetry';
 
 interface DuolingoQuizModalProps {
   subject: string;
   weakTopics: string[];
   avgScore: number;
+  prefetchedQuiz?: GeneratedQuiz | null;
   onClose: () => void;
   onRemediated: () => void;
 }
@@ -59,11 +61,13 @@ export function DuolingoQuizModal({
   subject,
   weakTopics,
   avgScore,
+  prefetchedQuiz,
   onClose,
   onRemediated,
 }: DuolingoQuizModalProps) {
-  const [phase, setPhase] = useState<Phase>('LOADING');
-  const [quiz, setQuiz] = useState<GeneratedQuiz | null>(null);
+  // If the quiz was pre-fetched, go straight to QUIZ; otherwise start with LOADING
+  const [phase, setPhase] = useState<Phase>(prefetchedQuiz ? 'QUIZ' : 'LOADING');
+  const [quiz, setQuiz] = useState<GeneratedQuiz | null>(prefetchedQuiz ?? null);
   const [errorMsg, setErrorMsg] = useState('');
 
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -75,16 +79,8 @@ export function DuolingoQuizModal({
     setPhase('LOADING');
     setErrorMsg('');
     try {
-      const res = await fetch('/api/generate-quiz', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject, weakTopics, avgScore }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error ?? 'Failed to generate quiz');
-      }
-      setQuiz(data as GeneratedQuiz);
+      const data = await fetchQuizWithRetry({ subject, weakTopics, avgScore });
+      setQuiz(data);
       setPhase('QUIZ');
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : 'Unknown error');
@@ -92,9 +88,12 @@ export function DuolingoQuizModal({
     }
   }, [subject, weakTopics, avgScore]);
 
+  // Only fetch in-modal if no quiz was pre-fetched (i.e. opened from error state)
   useEffect(() => {
-    fetchQuiz();
-  }, [fetchQuiz]);
+    if (!prefetchedQuiz) {
+      fetchQuiz();
+    }
+  }, [fetchQuiz, prefetchedQuiz]);
 
   const currentQ: QuizQuestion | undefined = quiz?.questions[currentIdx];
   const totalQ = quiz?.questions.length ?? 5;

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   BarChart,
@@ -12,8 +12,9 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
-import type { SubjectAnalytics, StudentAnalytics } from '@/types/student-db';
+import type { SubjectAnalytics, StudentAnalytics, GeneratedQuiz } from '@/types/student-db';
 import { DuolingoQuizModal } from './DuolingoQuizModal';
+import { fetchQuizWithRetry } from '@/lib/fetchQuizWithRetry';
 
 interface AnalyticsViewProps {
   analytics: StudentAnalytics;
@@ -26,11 +27,13 @@ function SubjectCard({
   isCritical,
   onStartQuiz,
   isRemediated,
+  quizReady,
 }: {
   subject: SubjectAnalytics;
   isCritical: boolean;
   onStartQuiz: () => void;
   isRemediated: boolean;
+  quizReady: boolean;
 }) {
   const chartData = [
     { name: 'CAT 1', score: subject.cat1Score, max: subject.maxCATScore },
@@ -59,7 +62,7 @@ function SubjectCard({
           : 'border-white'
       }`}
     >
-      {/* Critical glow pulse ring */}
+      {/* Critical indicator dot */}
       {isCritical && (
         <div className="absolute -top-1 -right-1 w-5 h-5">
           <span className="relative flex h-4 w-4">
@@ -77,7 +80,7 @@ function SubjectCard({
               {subject.code}
             </span>
             {isCritical && (
-              <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200 animate-pulse">
+              <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
                 Critical Deficit
               </span>
             )}
@@ -168,9 +171,21 @@ function SubjectCard({
         <button
           type="button"
           onClick={onStartQuiz}
-          className="w-full py-2.5 rounded-xl text-xs font-black text-white bg-rose-500 hover:bg-rose-600 transition shadow-sm cursor-pointer"
+          disabled={!quizReady}
+          className={`w-full py-2.5 rounded-xl text-xs font-black text-white transition shadow-sm flex items-center justify-center gap-2 ${
+            quizReady
+              ? 'bg-rose-500 hover:bg-rose-600 cursor-pointer'
+              : 'bg-rose-300 cursor-not-allowed'
+          }`}
         >
-          Revision Quiz Ready — Start Now →
+          {quizReady ? (
+            'Revision Quiz Ready — Start Now →'
+          ) : (
+            <>
+              <span className="w-3.5 h-3.5 border-2 border-white/60 border-t-white rounded-full animate-spin" />
+              Preparing quiz...
+            </>
+          )}
         </button>
       )}
       {isCritical && isRemediated && (
@@ -187,7 +202,45 @@ export function AnalyticsView({ analytics, studentName }: AnalyticsViewProps) {
   const [quizOpen, setQuizOpen] = useState(false);
   const [isRemediated, setIsRemediated] = useState(false);
 
+  // ── Prefetch state ────────────────────────────────────────────────────────
+  const [prefetchedQuiz, setPrefetchedQuiz] = useState<GeneratedQuiz | null>(null);
+  const [prefetchStatus, setPrefetchStatus] = useState<
+    'idle' | 'loading' | 'retrying' | 'ready' | 'error'
+  >('idle');
+  const [retryInfo, setRetryInfo] = useState<{ attempt: number; delayMs: number } | null>(null);
+
   const { criticalSubject, subjects } = analytics;
+
+  const runPrefetch = useCallback(async () => {
+    setPrefetchStatus('loading');
+    setRetryInfo(null);
+    try {
+      const quiz = await fetchQuizWithRetry(
+        {
+          subject: criticalSubject.name,
+          weakTopics: criticalSubject.conceptWeaknesses,
+          avgScore: criticalSubject.avgCATScore,
+        },
+        8, // max 8 attempts
+        (attempt, delayMs) => {
+          setPrefetchStatus('retrying');
+          setRetryInfo({ attempt, delayMs });
+        },
+      );
+      setPrefetchedQuiz(quiz);
+      setPrefetchStatus('ready');
+      setRetryInfo(null);
+    } catch {
+      setPrefetchStatus('error');
+    }
+  }, [criticalSubject]);
+
+  // Kick off prefetch immediately on mount
+  useEffect(() => {
+    runPrefetch();
+  }, [runPrefetch]);
+
+  const quizReady = prefetchStatus === 'ready' && prefetchedQuiz !== null;
 
   return (
     <>
@@ -196,6 +249,7 @@ export function AnalyticsView({ analytics, studentName }: AnalyticsViewProps) {
           subject={criticalSubject.name}
           weakTopics={criticalSubject.conceptWeaknesses}
           avgScore={criticalSubject.avgCATScore}
+          prefetchedQuiz={prefetchedQuiz}
           onClose={() => setQuizOpen(false)}
           onRemediated={() => setIsRemediated(true)}
         />
@@ -212,7 +266,7 @@ export function AnalyticsView({ analytics, studentName }: AnalyticsViewProps) {
               {studentName} — Subject Breakdown
             </h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              Granular CAT trajectory, assignment velocity & concept deficits
+              Granular CAT trajectory, assignment velocity &amp; concept deficits
             </p>
           </div>
           <Link
@@ -238,8 +292,14 @@ export function AnalyticsView({ analytics, studentName }: AnalyticsViewProps) {
               <p className="text-sm font-bold text-rose-900">
                 {criticalSubject.name} — CAT 1: {criticalSubject.cat1Score}/{criticalSubject.maxCATScore}, CAT 2: {criticalSubject.cat2Score}/{criticalSubject.maxCATScore}
               </p>
+              {/* Prefetch status indicator */}
               <p className="text-[11px] text-rose-700 mt-0.5">
-                Avg score {criticalSubject.avgCATScore.toFixed(1)}% &amp; declining — AI diagnostic quiz is available.
+                {prefetchStatus === 'loading' && 'Preparing AI diagnostic quiz...'}
+                {prefetchStatus === 'retrying' && retryInfo && (
+                  `High demand — retrying quiz generation (attempt ${retryInfo.attempt})...`
+                )}
+                {prefetchStatus === 'ready' && 'AI diagnostic quiz is ready — click to start immediately.'}
+                {prefetchStatus === 'error' && 'Quiz generation failed. You can retry from inside the quiz.'}
               </p>
             </div>
           </div>
@@ -252,9 +312,21 @@ export function AnalyticsView({ analytics, studentName }: AnalyticsViewProps) {
             <button
               type="button"
               onClick={() => setQuizOpen(true)}
-              className="shrink-0 px-4 py-2 rounded-xl text-xs font-black text-white bg-rose-500 hover:bg-rose-600 transition shadow-sm cursor-pointer"
+              disabled={!quizReady && prefetchStatus !== 'error'}
+              className={`shrink-0 px-4 py-2 rounded-xl text-xs font-black text-white transition shadow-sm flex items-center gap-2 ${
+                quizReady || prefetchStatus === 'error'
+                  ? 'bg-rose-500 hover:bg-rose-600 cursor-pointer'
+                  : 'bg-rose-300 cursor-not-allowed'
+              }`}
             >
-              Start Revision Quiz →
+              {prefetchStatus === 'loading' || prefetchStatus === 'retrying' ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-white/60 border-t-white rounded-full animate-spin" />
+                  Preparing...
+                </>
+              ) : (
+                'Start Revision Quiz →'
+              )}
             </button>
           )}
         </div>
@@ -268,6 +340,7 @@ export function AnalyticsView({ analytics, studentName }: AnalyticsViewProps) {
               isCritical={sub.id === criticalSubject.id}
               isRemediated={isRemediated && sub.id === criticalSubject.id}
               onStartQuiz={() => setQuizOpen(true)}
+              quizReady={quizReady || prefetchStatus === 'error'}
             />
           ))}
         </div>
