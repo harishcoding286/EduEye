@@ -21,14 +21,12 @@ export default function HomePage() {
 
   // Undergrad Student View: telemetry gauge, attendance progress, interactive schedule, and micro-drill modal
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 pb-16">
-      <StudentPortal
-        currentStudent={currentStudent}
-        profile={currentStudent}
-        onProfileUpdate={setCurrentStudent}
-        findOptimalSlot={findOptimalStudySlot}
-        onRemediationResolved={(score) => handleRemediationResolved(currentStudent.id, score)}
-      />
-    </div>
+    <StudentPortal
+      currentStudent={currentStudent}
+      profile={currentStudent}
+      onProfileUpdate={setCurrentStudent}
+      findOptimalSlot={findOptimalStudySlot}
+      onRemediationResolved={(score) => handleRemediationResolved(currentStudent.id, score)}
+    />
   );
 }

@@ -8,9 +8,6 @@ export interface ScheduleGridProps {
   onEventClick: (event: CalendarEvent) => void;
 }
 
-/**
- * Formats ISO string (e.g. "2026-09-24T09:00:00.000Z") to "09:00"
- */
 function formatTime(isoString: string): string {
   try {
     const d = new Date(isoString);
@@ -22,110 +19,122 @@ function formatTime(isoString: string): string {
   }
 }
 
-const HOURS = [
-  '08:00', '09:00', '10:00', '11:00', '12:00',
-  '13:00', '14:00', '15:00', '16:00', '17:00',
-  '18:00', '19:00', '20:00',
-];
-
 export const ScheduleGrid: React.FC<ScheduleGridProps> = ({ events, onEventClick }) => {
-  // Sort events chronologically
   const sortedEvents = [...events].sort(
     (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
   );
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-full">
+    <div className="bg-white/65 backdrop-blur-2xl border border-white/80 shadow-[0_16px_40px_-12px_rgba(0,120,255,0.08)] rounded-3xl p-8 flex flex-col h-full w-full">
       {/* Header */}
-      <div className="flex items-center justify-between pb-5 border-b border-slate-100 mb-5">
+      <div className="flex items-center justify-between pb-6 border-b border-slate-200/60 mb-6">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Today's Dynamic Schedule</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Chronobiological execution view (08:00 – 20:00)</p>
+          <span className="text-[11px] font-bold tracking-wider uppercase text-slate-400 block mb-0.5">
+            Chronobiological Life Schedule
+          </span>
+          <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+            Today's Timeline
+          </h2>
+          <p className="text-xs text-slate-500 mt-1">
+            Active focus windows and cognitive fatigue mitigation buffer
+          </p>
         </div>
-        <div className="flex items-center gap-3 text-xs">
+
+        {/* Legend */}
+        <div className="flex items-center gap-4 text-xs">
           <span className="flex items-center gap-1.5 font-medium text-slate-600">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Class
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-sm"></span> Class
           </span>
           <span className="flex items-center gap-1.5 font-medium text-slate-600">
-            <span className="w-2.5 h-2.5 rounded-full bg-zinc-400"></span> Personal
+            <span className="w-2.5 h-2.5 rounded-full bg-slate-300"></span> Personal
           </span>
-          <span className="flex items-center gap-1.5 font-medium text-amber-700">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span> Remediation
+          <span className="flex items-center gap-1.5 font-bold text-amber-700">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span> Focus Sprint
           </span>
         </div>
       </div>
 
-      {/* Time Grid / Agenda Hybrid */}
-      <div className="space-y-3 overflow-y-auto pr-1 flex-1">
+      {/* Spacious Event Timeline with generous h-16 row rhythm */}
+      <div className="space-y-4 overflow-y-auto pr-1 flex-1">
         {sortedEvents.length === 0 ? (
-          <div className="py-12 text-center text-slate-400 text-sm">
+          <div className="py-20 text-center text-slate-400 text-sm font-medium">
             No events scheduled for today.
           </div>
         ) : (
-          sortedEvents.map(event => {
+          sortedEvents.map((event) => {
             const isRemediation = event.category === 'REMEDIATION_LOCK';
             const isClass = event.category === 'CLASS';
-            const isPersonal = event.category === 'PERSONAL';
             const isCompleted = event.status === 'COMPLETED';
 
             const startTime = formatTime(event.startTime);
             const endTime = formatTime(event.endTime);
 
+            // ── Selective High-Gloss 3D Highlight: Remediation Focus Block ──
             if (isRemediation) {
               return (
                 <div
                   key={event.id}
                   onClick={() => onEventClick(event)}
-                  className={`p-4 rounded-xl border-2 transition-all cursor-pointer relative overflow-hidden group ${
+                  className={`min-h-[5rem] p-5 rounded-3xl transition-all cursor-pointer relative overflow-hidden group border ${
                     isCompleted
-                      ? 'bg-emerald-50/80 border-emerald-400/80 hover:bg-emerald-100/70 shadow-sm'
-                      : 'bg-amber-50/90 border-amber-400 animate-pulse-fast shadow-md hover:shadow-lg hover:border-amber-500'
+                      ? 'bg-gradient-to-r from-emerald-500/10 via-emerald-400/15 to-emerald-500/10 border-emerald-400/60 shadow-[0_12px_28px_-6px_rgba(16,185,129,0.18)] hover:bg-emerald-500/15'
+                      : 'bg-gradient-to-r from-amber-400/15 via-amber-300/25 to-amber-400/20 border-amber-400/80 shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),0_16px_36px_-8px_rgba(245,158,11,0.32)] hover:border-amber-500'
                   }`}
                 >
-                  {/* Status indicator bar */}
+                  {/* Top Specular Gloss Line */}
+                  <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none" />
+
+                  {/* Left Accent Bar */}
                   <div
-                    className={`absolute top-0 left-0 bottom-0 w-1.5 ${
-                      isCompleted ? 'bg-emerald-500' : 'bg-amber-500'
+                    className={`absolute top-0 left-0 bottom-0 w-2 ${
+                      isCompleted ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'
                     }`}
                   />
 
-                  <div className="flex items-start justify-between gap-3 pl-2">
-                    <div>
-                      <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between gap-4 pl-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2.5">
                         <span
-                          className={`text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                          className={`text-[11px] font-black uppercase tracking-wider px-3 py-0.5 rounded-full ${
                             isCompleted
-                              ? 'bg-emerald-200 text-emerald-800'
-                              : 'bg-amber-200 text-amber-900 animate-pulse'
+                              ? 'bg-emerald-200/90 text-emerald-900 border border-emerald-300'
+                              : 'bg-amber-300/90 text-amber-950 border border-amber-400/80 animate-pulse'
                           }`}
                         >
                           {isCompleted ? '✅ Resolved' : '🎯 Focus Sprint'}
                         </span>
-                        <span className="text-xs font-mono font-semibold text-slate-600">
+                        <span className="text-xs font-mono font-bold text-slate-700">
                           {startTime} – {endTime}
+                        </span>
+                        <span className="text-[11px] text-slate-500 hidden sm:inline">
+                          (45 min cognitive window)
                         </span>
                       </div>
 
-                      <h3 className="font-bold text-slate-900 text-base mt-1.5 group-hover:text-amber-900">
+                      <h3 className="font-extrabold text-slate-900 text-base tracking-tight group-hover:text-amber-950 transition-colors">
                         {event.title}
                       </h3>
 
                       {event.topic && (
-                        <p className="text-xs text-slate-600 mt-0.5">
-                          Target Deficit: <span className="font-semibold text-slate-800">{event.topic}</span>
+                        <p className="text-xs text-slate-600">
+                          Isolated Gap: <span className="font-semibold text-slate-800">{event.topic}</span>
                         </p>
                       )}
                     </div>
 
+                    {/* High-Gloss Action Button */}
                     <div className="shrink-0 text-right">
                       {isCompleted ? (
-                        <span className="inline-flex items-center text-xs font-semibold text-emerald-700 bg-emerald-100/80 px-2.5 py-1 rounded-lg">
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 bg-emerald-100/90 px-3.5 py-2 rounded-2xl border border-emerald-300/70 shadow-sm">
                           ✅ Resolved
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-900 bg-amber-200/90 px-3 py-1.5 rounded-lg group-hover:bg-amber-300 transition-colors">
-                          Start Drill →
-                        </span>
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1.5 text-xs font-black text-slate-950 bg-gradient-to-r from-amber-400 via-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 px-4 py-2.5 rounded-2xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.8),0_6px_18px_rgba(245,158,11,0.35)] transition-all group-hover:scale-105 active:scale-95"
+                        >
+                          Start Micro-Drill →
+                        </button>
                       )}
                     </div>
                   </div>
@@ -133,25 +142,26 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({ events, onEventClick
               );
             }
 
+            // ── Clean Class Event Card ──
             if (isClass) {
               return (
                 <div
                   key={event.id}
                   onClick={() => onEventClick(event)}
-                  className="p-3.5 rounded-xl border border-blue-200/70 bg-gradient-to-r from-blue-50/60 to-slate-50 hover:bg-blue-50 transition-all cursor-pointer pl-4 relative"
+                  className="min-h-[4.5rem] p-4 rounded-2xl border border-slate-200/80 bg-white/70 hover:bg-white transition-all cursor-pointer pl-5 relative shadow-sm group"
                 >
-                  <div className="absolute top-0 left-0 bottom-0 w-1 bg-blue-500 rounded-l-xl" />
+                  <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-blue-500 rounded-l-2xl" />
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-semibold text-blue-700 uppercase tracking-wide bg-blue-100/70 px-2 py-0.5 rounded">
+                        <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider bg-blue-50 px-2.5 py-0.5 rounded-md border border-blue-200/50">
                           Class
                         </span>
-                        <span className="text-xs font-mono text-slate-500">
+                        <span className="text-xs font-mono font-semibold text-slate-500">
                           {startTime} – {endTime}
                         </span>
                       </div>
-                      <h3 className="font-semibold text-slate-800 text-sm mt-1">{event.title}</h3>
+                      <h3 className="font-bold text-slate-800 text-sm mt-1">{event.title}</h3>
                       {event.topic && (
                         <span className="text-xs text-slate-500">Topic: {event.topic}</span>
                       )}
@@ -164,27 +174,27 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({ events, onEventClick
               );
             }
 
-            // 'PERSONAL'
+            // ── Clean Personal Event Card ──
             return (
               <div
                 key={event.id}
                 onClick={() => onEventClick(event)}
-                className="p-3.5 rounded-xl border border-zinc-200/80 bg-zinc-50/70 hover:bg-zinc-100/70 transition-all cursor-pointer pl-4 relative"
+                className="min-h-[4.5rem] p-4 rounded-2xl border border-slate-200/60 bg-white/50 hover:bg-white/80 transition-all cursor-pointer pl-5 relative shadow-sm group"
               >
-                <div className="absolute top-0 left-0 bottom-0 w-1 bg-zinc-400 rounded-l-xl" />
+                <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-slate-300 rounded-l-2xl" />
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-medium text-zinc-600 uppercase tracking-wide bg-zinc-200/70 px-2 py-0.5 rounded">
+                      <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider bg-slate-100 px-2.5 py-0.5 rounded-md">
                         Personal
                       </span>
-                      <span className="text-xs font-mono text-slate-500">
+                      <span className="text-xs font-mono font-semibold text-slate-500">
                         {startTime} – {endTime}
                       </span>
                     </div>
                     <h3 className="font-medium text-slate-700 text-sm mt-1">{event.title}</h3>
                   </div>
-                  <span className="text-xs text-zinc-400">Scheduled</span>
+                  <span className="text-xs text-slate-400 font-medium">Scheduled</span>
                 </div>
               </div>
             );
@@ -193,11 +203,15 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({ events, onEventClick
       </div>
 
       {/* Hourly Reference Markers */}
-      <div className="pt-4 border-t border-slate-100 mt-4">
-        <div className="flex justify-between text-[11px] text-slate-400 font-mono overflow-x-auto pb-1">
-          {HOURS.filter((_, idx) => idx % 2 === 0).map(h => (
-            <span key={h}>{h}</span>
-          ))}
+      <div className="pt-6 border-t border-slate-200/50 mt-6">
+        <div className="flex justify-between text-[11px] text-slate-400 font-mono">
+          <span>08:00</span>
+          <span>10:00</span>
+          <span>12:00 (Lunch)</span>
+          <span>14:00 (Prime Focus)</span>
+          <span>16:00</span>
+          <span>18:00</span>
+          <span>20:00</span>
         </div>
       </div>
     </div>

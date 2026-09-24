@@ -11,10 +11,8 @@ export function CohortKPICards({ totalStudentsOverride = 42 }: CohortKPICardsPro
   const { cohort } = useAppContext();
 
   const metrics = useMemo(() => {
-    // Critical risk count
     const criticalCount = cohort.filter((s) => s.riskTier === 'CRITICAL').length;
 
-    // Active auto-interventions (remediation lock blocks currently scheduled)
     const activeInterventions = cohort.reduce((acc, student) => {
       const scheduledLocks = student.calendarEvents.filter(
         (e) => e.category === 'REMEDIATION_LOCK' && e.status === 'SCHEDULED'
@@ -22,7 +20,6 @@ export function CohortKPICards({ totalStudentsOverride = 42 }: CohortKPICardsPro
       return acc + scheduledLocks;
     }, 0);
 
-    // Cohort average grade calculation
     const avgGrade = Math.round(
       cohort.reduce((acc, s) => acc + s.predictedGrade, 0) / (cohort.length || 1)
     );
@@ -36,128 +33,96 @@ export function CohortKPICards({ totalStudentsOverride = 42 }: CohortKPICardsPro
   }, [cohort, totalStudentsOverride]);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {/* 1. Total Enrolled Students */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm hover:shadow-md transition-shadow">
+      <div className="bg-white/65 backdrop-blur-2xl border border-white/80 shadow-[0_16px_40px_-12px_rgba(0,120,255,0.08)] rounded-3xl p-6 transition-all hover:bg-white/80">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Total Students
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            Total Enrolled
           </span>
-          <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm">
+          <div className="w-8 h-8 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm">
             👥
           </div>
         </div>
         <div className="mt-3 flex items-baseline gap-2">
-          <span className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          <span className="text-3xl font-black text-slate-900 tracking-tight">
             {metrics.total}
           </span>
-          <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+          <span className="text-xs font-semibold text-emerald-700 bg-emerald-100/70 px-2.5 py-0.5 rounded-full border border-emerald-200/50">
             100% active
           </span>
         </div>
-        <p className="mt-1 text-xs text-slate-400">
-          Linear Algebra & Algorithms Section 04
+        <p className="mt-1 text-xs text-slate-500">
+          Linear Algebra Section 04
         </p>
       </div>
 
-      {/* 2. Cohort Predicted Average */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm hover:shadow-md transition-shadow">
+      {/* 2. Projected Cohort Average */}
+      <div className="bg-white/65 backdrop-blur-2xl border border-white/80 shadow-[0_16px_40px_-12px_rgba(0,120,255,0.08)] rounded-3xl p-6 transition-all hover:bg-white/80">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Cohort Average
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            Projected Mean
           </span>
-          <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">
-            📊
+          <div className="w-8 h-8 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">
+            📈
           </div>
         </div>
         <div className="mt-3 flex items-baseline gap-2">
-          <span className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          <span className="text-3xl font-black text-slate-900 tracking-tight">
             {metrics.avgGrade}%
           </span>
-          <span
-            className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-              metrics.avgGrade >= 75
-                ? 'text-emerald-700 bg-emerald-50'
-                : 'text-amber-700 bg-amber-50'
-            }`}
-          >
-            {metrics.avgGrade >= 75 ? '↑ Benchmark met' : '↓ Attention needed'}
+          <span className="text-xs font-semibold text-blue-700 bg-blue-100/70 px-2.5 py-0.5 rounded-full border border-blue-200/50">
+            Term Target 75%
           </span>
         </div>
-        <p className="mt-1 text-xs text-slate-400">
-          ML predicted term mastery curve
+        <p className="mt-1 text-xs text-slate-500">
+          ML end-of-term projection
         </p>
       </div>
 
       {/* 3. Active Auto-Interventions */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm hover:shadow-md transition-shadow">
+      <div className="bg-white/65 backdrop-blur-2xl border border-white/80 shadow-[0_16px_40px_-12px_rgba(0,120,255,0.08)] rounded-3xl p-6 transition-all hover:bg-white/80">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Auto-Interventions
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            Active Focus Locks
           </span>
-          <div className="w-8 h-8 rounded-xl bg-cyan-50 text-cyan-700 flex items-center justify-center font-bold text-sm">
-            ⚡
+          <div className="w-8 h-8 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-sm">
+            🔒
           </div>
         </div>
         <div className="mt-3 flex items-baseline gap-2">
-          <span className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          <span className="text-3xl font-black text-amber-700 tracking-tight">
             {metrics.activeInterventions}
           </span>
-          <span className="text-xs font-semibold text-cyan-800 bg-cyan-50 border border-cyan-200/60 px-2 py-0.5 rounded-full">
-            Autonomous
+          <span className="text-xs font-semibold text-amber-800 bg-amber-100/80 px-2.5 py-0.5 rounded-full border border-amber-200/60 animate-pulse">
+            In Flight
           </span>
         </div>
-        <p className="mt-1 text-xs text-slate-400">
-          Remediation locks active on calendars
+        <p className="mt-1 text-xs text-slate-500">
+          Autonomous calendar rewirings
         </p>
       </div>
 
-      {/* 4. Critical Alerts */}
-      <div
-        className={`rounded-2xl border p-5 transition-all shadow-sm ${
-          metrics.criticalCount > 0
-            ? 'bg-red-50/60 border-red-200 hover:shadow-red-100'
-            : 'bg-white border-slate-200'
-        }`}
-      >
+      {/* 4. Critical Triage Count */}
+      <div className="bg-white/65 backdrop-blur-2xl border border-white/80 shadow-[0_16px_40px_-12px_rgba(0,120,255,0.08)] rounded-3xl p-6 transition-all hover:bg-white/80">
         <div className="flex items-center justify-between">
-          <span
-            className={`text-xs font-semibold uppercase tracking-wider ${
-              metrics.criticalCount > 0 ? 'text-red-700' : 'text-slate-500'
-            }`}
-          >
-            Critical Alerts
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            Critical Triage
           </span>
-          <div
-            className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm ${
-              metrics.criticalCount > 0
-                ? 'bg-red-100 text-red-700 animate-pulse'
-                : 'bg-emerald-50 text-emerald-600'
-            }`}
-          >
-            {metrics.criticalCount > 0 ? '⚠️' : '✓'}
+          <div className="w-8 h-8 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-sm">
+            ⚠️
           </div>
         </div>
         <div className="mt-3 flex items-baseline gap-2">
-          <span
-            className={`text-3xl font-extrabold tracking-tight ${
-              metrics.criticalCount > 0 ? 'text-red-700' : 'text-slate-900'
-            }`}
-          >
+          <span className="text-3xl font-black text-rose-600 tracking-tight">
             {metrics.criticalCount}
           </span>
-          {metrics.criticalCount > 0 ? (
-            <span className="text-xs font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded-full animate-pulse">
-              Requires review
-            </span>
-          ) : (
-            <span className="text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-              Zero at-risk
-            </span>
-          )}
+          <span className="text-xs font-semibold text-rose-800 bg-rose-100/80 px-2.5 py-0.5 rounded-full border border-rose-200/60">
+            Requires Eye
+          </span>
         </div>
-        <p className="mt-1 text-xs text-slate-400">
-          Students with high prerequisite attrition
+        <p className="mt-1 text-xs text-slate-500">
+          Students below 60% threshold
         </p>
       </div>
     </div>

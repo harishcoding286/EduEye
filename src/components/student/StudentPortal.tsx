@@ -29,14 +29,12 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
 }) => {
   const activeIncomingProfile = currentStudent || propProfile;
 
-  // Local state initialized with incoming profile or initialStudent
   const [localProfile, setLocalProfile] = useState<StudentProfile>(() => {
     return activeIncomingProfile
       ? structuredClone(activeIncomingProfile)
       : structuredClone(initialStudent);
   });
 
-  // Keep local state in sync whenever external profile updates
   useEffect(() => {
     if (activeIncomingProfile) {
       setLocalProfile(activeIncomingProfile);
@@ -54,22 +52,18 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
     }
   };
 
-  // Handle Event Click on the Schedule Grid
   const handleEventClick = (event: CalendarEvent) => {
     if (propOnEventClick) {
       propOnEventClick(event);
     }
 
-    // If an amber/remediation event is clicked, open the micro-drill modal
     if (event.category === 'REMEDIATION_LOCK' && event.status === 'SCHEDULED') {
       setSelectedEvent(event);
       setIsModalOpen(true);
     }
   };
 
-  // Simulate Pop Quiz Ingestion Drop (38% Eigenvalues)
   const handleSimulateDrop = () => {
-    // 1. Autonomous schedule slot calculation
     const slot = findOptimalSlot(activeProfile.calendarEvents, 45);
 
     const newRemediationEvent: CalendarEvent = {
@@ -82,7 +76,6 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
       topic: 'Eigenvalues & Eigenvectors',
     };
 
-    // Filter out previous remediation locks for this topic to allow re-testing
     const filteredEvents = activeProfile.calendarEvents.filter(
       (e) => !(e.category === 'REMEDIATION_LOCK' && e.status === 'SCHEDULED')
     );
@@ -113,16 +106,13 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
     updateProfile(updatedProfile);
   };
 
-  // Handle Diagnostic Quiz Completion (>= 2/3 Mastery)
   const handleQuizComplete = (score: number) => {
     setIsModalOpen(false);
 
-    // Call centralized context handler if provided
     if (onRemediationResolved) {
       onRemediationResolved(score);
     }
 
-    // Also update local state for self-contained execution
     const updatedEvents = activeProfile.calendarEvents.map((evt) => {
       if (
         evt.category === 'REMEDIATION_LOCK' ||
@@ -147,39 +137,39 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
-      {/* Page Header */}
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-slate-200">
+    <div className="max-w-7xl mx-auto px-8 py-10 min-h-screen flex flex-col gap-8">
+      {/* Spacious, Serene Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200/50">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold tracking-wider uppercase text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
-              FlowBuild Autonomous Engine
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-[11px] font-bold tracking-wider uppercase text-blue-600 bg-blue-100/60 px-3 py-0.5 rounded-full border border-blue-200/50">
+              Student Execution Terminal
             </span>
-            <span className="text-xs text-slate-400 font-mono">Student Executive Perspective</span>
+            <span className="text-xs text-slate-400 font-mono">Real-Time Cognitive Feedback</span>
           </div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight mt-1">
-            EduEye Student Health &amp; Dynamic Calendar
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+            Academic Health &amp; Dynamic Calendar
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Real-time cognitive scheduling and closed-loop prerequisite gap remediation.
+          <p className="text-xs text-slate-500 mt-1">
+            Autonomous prerequisite gap isolation with chronobiological focus slot allocation.
           </p>
         </div>
 
-        {/* Demo trigger quick action */}
-        <div className="flex items-center gap-2">
+        {/* Header Action Pill */}
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={handleSimulateDrop}
-            className="px-3.5 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all shadow-sm active:scale-95"
+            className="px-4 py-2.5 text-xs font-bold text-slate-800 bg-white/80 hover:bg-white border border-slate-200/80 rounded-2xl transition-all shadow-sm hover:shadow hover:scale-[1.01] active:scale-[0.99]"
           >
-            ⚡ Test 60s Trigger (Pop Quiz Drop)
+            ⚡ Test Ingestion (Pop Quiz 38%)
           </button>
         </div>
       </div>
 
-      {/* Desktop 2-Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: StudentHealthCard (~40% width -> 5 cols on lg) */}
+      {/* Desktop 2-Column Layout (40% / 60%) with gap-8 */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: 3 Clear, Well-Spaced Cards (~40% width -> 5 cols on lg) */}
         <div className="lg:col-span-5 w-full">
           <StudentHealthCard
             profile={activeProfile}
@@ -187,7 +177,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
           />
         </div>
 
-        {/* Right Column: ScheduleGrid (~60% width -> 7 cols on lg) */}
+        {/* Right Column: Spacious Calendar Grid (~60% width -> 7 cols on lg) */}
         <div className="lg:col-span-7 w-full">
           <ScheduleGrid
             events={activeProfile.calendarEvents}

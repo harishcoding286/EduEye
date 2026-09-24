@@ -75,19 +75,19 @@ export function StudentRosterTable({ onSelectStudent }: StudentRosterTableProps)
     switch (tier) {
       case 'OPTIMAL':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300/80">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100/80 text-emerald-800 border border-emerald-300/60">
             OPTIMAL
           </span>
         );
       case 'REMEDIATING':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300/80">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100/80 text-amber-800 border border-amber-300/60">
             REMEDIATING
           </span>
         );
       case 'CRITICAL':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 border border-red-300 animate-pulse">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-rose-100/90 text-rose-800 border border-rose-300/70 animate-pulse">
             CRITICAL
           </span>
         );
@@ -97,60 +97,50 @@ export function StudentRosterTable({ onSelectStudent }: StudentRosterTableProps)
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-emerald-600 font-bold';
-    if (score >= 60) return 'text-amber-600 font-semibold';
-    return 'text-red-600 font-bold';
+    if (score >= 80) return 'text-emerald-700 font-extrabold';
+    if (score >= 60) return 'text-amber-700 font-extrabold';
+    return 'text-rose-600 font-extrabold';
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
+    <div className="bg-white/65 backdrop-blur-2xl border border-white/80 shadow-[0_16px_40px_-12px_rgba(0,120,255,0.08)] rounded-3xl overflow-hidden flex flex-col">
       {/* Table Toolbar */}
-      <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-slate-50/50">
+      <div className="p-7 border-b border-slate-200/60 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white/40">
         <div>
-          <h2 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
+          <h2 className="text-lg font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
             <span>Student Cohort Telemetry</span>
-            <span className="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-semibold">
+            <span className="text-xs bg-slate-200/80 text-slate-700 px-2.5 py-0.5 rounded-full font-bold">
               {filteredStudents.length} of {cohort.length}
             </span>
           </h2>
-          <p className="text-xs text-slate-500">
-            Real-time mastery tracking, submission velocity, and autonomous remediation status
+          <p className="text-xs text-slate-500 mt-0.5">
+            Prioritized in real-time by cognitive risk triage (Critical ➔ Remediating ➔ Optimal)
           </p>
         </div>
 
-        {/* Filter controls */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Search */}
+        {/* Search & Tier Filters */}
+        <div className="flex flex-wrap items-center gap-3">
           <div className="relative">
             <input
               type="text"
-              placeholder="Search student..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="text-xs rounded-xl border border-slate-300 bg-white px-3 py-1.5 pr-7 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 placeholder-slate-400 w-44"
+              placeholder="Search student..."
+              className="text-xs py-2 px-3.5 pl-8 rounded-2xl bg-white/80 border border-slate-200/90 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all shadow-sm"
             />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2 top-1.5 text-xs text-slate-400 hover:text-slate-600"
-              >
-                ✕
-              </button>
-            )}
+            <span className="absolute left-2.5 top-2.5 text-xs text-slate-400">🔍</span>
           </div>
 
-          {/* Tier Filter Pills */}
-          <div className="inline-flex rounded-xl bg-slate-200/70 p-0.5 text-xs font-medium text-slate-600">
+          <div className="inline-flex rounded-2xl bg-slate-100/90 p-1 border border-slate-200/60 text-xs">
             {['ALL', 'CRITICAL', 'REMEDIATING', 'OPTIMAL'].map((tier) => (
               <button
                 key={tier}
                 type="button"
                 onClick={() => setFilterTier(tier)}
-                className={`px-2.5 py-1 rounded-lg transition-all ${
+                className={`px-3 py-1 rounded-xl font-bold transition-all ${
                   filterTier === tier
-                    ? 'bg-white text-slate-900 shadow-sm font-semibold'
-                    : 'hover:text-slate-900'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
                 {tier}
@@ -160,50 +150,51 @@ export function StudentRosterTable({ onSelectStudent }: StudentRosterTableProps)
         </div>
       </div>
 
-      {/* Responsive Table */}
+      {/* Success Notification Banner */}
+      {actionSuccessId && (
+        <div className="px-6 py-2.5 bg-blue-50/80 border-b border-blue-200/80 text-blue-900 text-xs font-semibold flex items-center justify-between">
+          <span>🚀 TA 1-on-1 Office Hours session locked into student calendar.</span>
+          <span className="text-[11px] font-mono text-blue-500">Autonomous Sync Done</span>
+        </div>
+      )}
+
+      {/* Roster Table: Generous row height py-4 with clean dark navy slate text */}
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-100/80 text-slate-500 text-[11px] font-semibold uppercase tracking-wider border-b border-slate-200/80">
+            <tr className="border-b border-slate-200/60 text-[11px] font-extrabold uppercase tracking-wider text-slate-400 bg-slate-50/30">
               <th
-                className="py-3 px-4 cursor-pointer hover:text-slate-800 transition"
+                className="py-4 px-6 cursor-pointer hover:text-slate-700 transition"
                 onClick={() => handleSort('name')}
               >
                 Student Name {sortField === 'name' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
               </th>
               <th
-                className="py-3 px-4 cursor-pointer hover:text-slate-800 transition text-right sm:text-left"
+                className="py-4 px-6 cursor-pointer hover:text-slate-700 transition"
                 onClick={() => handleSort('predictedGrade')}
               >
-                Predicted Grade {sortField === 'predictedGrade' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                Predicted Outcome {sortField === 'predictedGrade' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
               </th>
               <th
-                className="py-3 px-4 cursor-pointer hover:text-slate-800 transition"
+                className="py-4 px-6 cursor-pointer hover:text-slate-700 transition"
                 onClick={() => handleSort('attendanceRate')}
               >
                 Attendance {sortField === 'attendanceRate' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
               </th>
-              <th className="py-3 px-4">Recent Velocity</th>
-              <th className="py-3 px-4">Concept Status</th>
-              <th className="py-3 px-4">Risk Tier</th>
-              <th className="py-3 px-4 text-right">Actions</th>
+              <th className="py-4 px-6">Prerequisite Deficits</th>
+              <th className="py-4 px-6">Risk Status</th>
+              <th className="py-4 px-6 text-right">Autonomous Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
+          <tbody className="divide-y divide-slate-100/90 text-sm text-slate-800">
             {filteredStudents.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-xs text-slate-400">
+                <td colSpan={6} className="py-12 text-center text-xs text-slate-400">
                   No students found matching your criteria.
                 </td>
               </tr>
             ) : (
               filteredStudents.map((student) => {
-                // Calculate submission velocity from recent assessments
-                const recentAsmt = student.recentAssessments[student.recentAssessments.length - 1];
-                const lagDelta = recentAsmt
-                  ? recentAsmt.actualLagHours - recentAsmt.expectedLagHours
-                  : 0;
-
                 const hasRemediationActive = student.calendarEvents.some(
                   (e) => e.category === 'REMEDIATION_LOCK' && e.status === 'SCHEDULED'
                 );
@@ -212,11 +203,11 @@ export function StudentRosterTable({ onSelectStudent }: StudentRosterTableProps)
                   <tr
                     key={student.id}
                     onClick={() => handleRowClick(student)}
-                    className="hover:bg-slate-50/80 cursor-pointer transition-colors group"
+                    className="hover:bg-slate-50/70 cursor-pointer transition-colors group"
                   >
                     {/* Name */}
-                    <td className="py-3.5 px-4">
-                      <div className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                    <td className="py-4 px-6">
+                      <div className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
                         {student.name}
                       </div>
                       <div className="text-[11px] text-slate-400 font-mono">
@@ -225,120 +216,71 @@ export function StudentRosterTable({ onSelectStudent }: StudentRosterTableProps)
                     </td>
 
                     {/* Predicted Grade */}
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-1.5">
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-2">
                         <span className={`text-base ${getScoreColor(student.predictedGrade)}`}>
                           {student.predictedGrade}%
                         </span>
-                        <span className="text-[10px] text-slate-400">
-                          {student.predictedGrade >= 80 ? '🎯' : student.predictedGrade >= 60 ? '⚡' : '🔻'}
-                        </span>
+                        {hasRemediationActive && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold border border-amber-300">
+                            Lock Active
+                          </span>
+                        )}
                       </div>
                     </td>
 
                     {/* Attendance */}
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-16 bg-slate-200 rounded-full h-1.5 overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${
-                              student.attendanceRate >= 80
-                                ? 'bg-emerald-500'
-                                : student.attendanceRate >= 60
-                                ? 'bg-amber-500'
-                                : 'bg-red-500'
-                            }`}
-                            style={{ width: `${student.attendanceRate}%` }}
-                          />
-                        </div>
-                        <span className="text-xs font-medium text-slate-600">
-                          {student.attendanceRate}%
-                        </span>
+                    <td className="py-4 px-6">
+                      <div className="text-xs font-semibold text-slate-700">
+                        {student.attendanceRate}%
+                      </div>
+                      <div className="w-16 bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1">
+                        <div
+                          className="bg-slate-600 h-full rounded-full"
+                          style={{ width: `${student.attendanceRate}%` }}
+                        />
                       </div>
                     </td>
 
-                    {/* Velocity (Submission Lag vs Expected) */}
-                    <td className="py-3.5 px-4">
-                      {recentAsmt ? (
-                        <div className="text-xs">
-                          <span
-                            className={`font-semibold ${
-                              lagDelta <= 0
-                                ? 'text-emerald-600'
-                                : lagDelta <= 12
-                                ? 'text-amber-600'
-                                : 'text-red-600 font-bold'
-                            }`}
-                          >
-                            {lagDelta <= 0 ? `${Math.abs(lagDelta)}h ahead` : `+${lagDelta}h lag`}
-                          </span>
-                          <span className="text-[10px] text-slate-400 block truncate max-w-[130px]" title={recentAsmt.topic}>
-                            {recentAsmt.topic}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-slate-400">Stable</span>
-                      )}
-                    </td>
-
-                    {/* Concept Status / Deficits */}
-                    <td className="py-3.5 px-4">
+                    {/* Prerequisite Deficits */}
+                    <td className="py-4 px-6">
                       {student.activeDeficits.length === 0 ? (
-                        <span className="inline-flex items-center text-[11px] text-emerald-600 font-medium">
-                          ✓ No deficits
+                        <span className="text-xs text-emerald-700 font-medium flex items-center gap-1">
+                          ✓ None
                         </span>
                       ) : (
-                        <div className="flex flex-wrap gap-1 max-w-[180px]">
-                          {student.activeDeficits.slice(0, 2).map((deficit) => (
+                        <div className="flex flex-wrap gap-1">
+                          {student.activeDeficits.slice(0, 2).map((d) => (
                             <span
-                              key={deficit}
-                              className="inline-block text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200"
-                              title={deficit}
+                              key={d}
+                              className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-800 border border-rose-200"
                             >
-                              {deficit.replace(/-/g, ' ')}
+                              {d.replace(/-/g, ' ')}
                             </span>
                           ))}
                           {student.activeDeficits.length > 2 && (
-                            <span className="text-[10px] text-slate-400 font-semibold self-center">
-                              +{student.activeDeficits.length - 2} more
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              +{student.activeDeficits.length - 2}
                             </span>
                           )}
                         </div>
                       )}
                     </td>
 
-                    {/* Risk Tier Badge */}
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-1.5">
-                        {getRiskBadge(student.riskTier)}
-                        {hasRemediationActive && (
-                          <span
-                            className="text-[11px] text-cyan-600 font-bold"
-                            title="Remediation block active"
-                          >
-                            🔒
-                          </span>
-                        )}
-                      </div>
+                    {/* Risk Tier */}
+                    <td className="py-4 px-6">
+                      {getRiskBadge(student.riskTier)}
                     </td>
 
                     {/* Actions */}
-                    <td className="py-3.5 px-4 text-right">
-                      {student.riskTier === 'CRITICAL' ? (
-                        <button
-                          type="button"
-                          onClick={(e) => handleDispatchTA(e, student.id)}
-                          className={`px-3 py-1 text-xs font-semibold rounded-lg shadow-sm transition-all border ${
-                            actionSuccessId === student.id
-                              ? 'bg-emerald-600 text-white border-emerald-500'
-                              : 'bg-red-50 text-red-700 hover:bg-red-100 border-red-200 active:scale-95'
-                          }`}
-                        >
-                          {actionSuccessId === student.id ? '✓ Invite Sent' : 'Dispatch TA Invite'}
-                        </button>
-                      ) : (
-                        <span className="text-xs text-slate-400">Autonomous</span>
-                      )}
+                    <td className="py-4 px-6 text-right">
+                      <button
+                        type="button"
+                        onClick={(e) => handleDispatchTA(e, student.id)}
+                        className="text-xs font-bold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl border border-blue-200 transition-colors shadow-sm"
+                      >
+                        Dispatch TA →
+                      </button>
                     </td>
                   </tr>
                 );
