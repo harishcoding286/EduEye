@@ -16,57 +16,54 @@ export function TeacherPortal() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8 min-h-screen flex flex-col gap-6">
-      {/* Cockpit Header Banner: Cute Frutiger Aero Glass Capsule */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 rounded-[2.2rem] bg-white/75 backdrop-blur-2xl p-7 border-2 border-white/95 shadow-[0_16px_40px_rgba(147,197,253,0.2),inset_0_2px_4px_rgba(255,255,255,0.95)] relative overflow-hidden">
-        {/* Specular sheen */}
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-white/90 to-transparent pointer-events-none" />
-
+    <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6 min-h-screen flex flex-col gap-6">
+      {/* Cockpit Header Banner */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 rounded-3xl bg-white/85 backdrop-blur-xl p-6 border border-white shadow-[0_12px_32px_-8px_rgba(51,104,160,0.12)] relative overflow-hidden">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 bg-blue-100/80 px-3 py-0.5 rounded-full border border-blue-200 shadow-sm flex items-center gap-1">
-              <span>👩‍🏫</span> Faculty &amp; Advisor Cockpit
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[10px] font-black uppercase tracking-wider text-[#3368A0] bg-[#C8DFDB]/40 px-2.5 py-0.5 rounded-md border border-[#C8DFDB]">
+              Faculty Cockpit
             </span>
-            <span className="text-xs text-slate-400 font-mono font-bold">
-              Term 2026-Q3 🫧
+            <span className="text-slate-300">•</span>
+            <span className="text-xs text-slate-500 font-mono">
+              MATH-204
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Linear Algebra &amp; Discrete Structures (MATH-204)
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            Linear Algebra &amp; Discrete Structures
           </h1>
-          <p className="text-xs font-semibold text-slate-500 mt-1">
-            Course Director: <span className="font-black text-slate-700">Dr. Sarah Vance</span> • 
-            Autonomous closed-loop student remediation active across all enrolled cohorts ☁️
+          <p className="text-xs text-slate-500 mt-0.5">
+            Course Director: <span className="font-bold text-slate-700">Dr. Sarah Vance</span> • Closed-loop remediation monitoring
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="px-4 py-2 rounded-2xl bg-white/90 border border-white text-xs shadow-sm">
-            <span className="text-slate-400 block text-[9px] uppercase font-black tracking-wider">
-              Focus Student 🎯
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="px-3.5 py-1.5 rounded-xl bg-[#C8DFDB]/20 border border-[#C8DFDB] text-xs">
+            <span className="text-slate-400 block text-[9px] uppercase font-bold">
+              Focus Student
             </span>
-            <span className="font-black text-slate-900">
+            <span className="font-bold text-[#3368A0]">
               {currentStudent.name} ({currentStudent.predictedGrade}%)
             </span>
           </div>
 
-          <div className="px-3.5 py-2 rounded-2xl bg-emerald-100/90 border border-emerald-300 text-emerald-900 text-xs font-black flex items-center gap-2 shadow-sm">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span>
-            Autonomous Schedulers Live ✨
+          <div className="px-3.5 py-2 rounded-xl bg-[#C8DFDB]/40 border border-[#C8DFDB] text-[#3368A0] text-xs font-bold flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-[#3368A0]"></span>
+            Schedulers Active
           </div>
         </div>
       </div>
 
       {/* Selected Student Toast */}
       {selectedStudentNotification && (
-        <div className="p-4 bg-sky-50/90 border-2 border-sky-200 text-sky-950 rounded-2xl text-xs font-bold animate-in fade-in duration-200 flex items-center justify-between shadow-sm">
-          <span>🎯 {selectedStudentNotification} — Context synchronized across the execution engine! ✨</span>
+        <div className="p-3 bg-[#C8DFDB]/30 border border-[#C8DFDB] text-[#3368A0] rounded-xl text-xs font-bold animate-in fade-in duration-150 flex items-center justify-between">
+          <span>{selectedStudentNotification} — Context synchronized across the engine.</span>
           <button
             type="button"
             onClick={() => setSelectedStudentNotification(null)}
-            className="text-sky-500 hover:text-sky-700 font-black cursor-pointer text-sm"
+            className="text-slate-400 hover:text-slate-700 font-bold cursor-pointer text-sm"
           >
-            ✕
+            ×
           </button>
         </div>
       )}
@@ -76,13 +73,13 @@ export function TeacherPortal() {
 
       {/* Main Cockpit Layout: 2 Columns with gap-8 */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Main Left Section: Cohort Roster Table (8 cols on lg) */}
+        {/* Main Left Section: Cohort Roster Table (8 cols) */}
         <div className="lg:col-span-8 space-y-6">
           <StudentRosterTable onSelectStudent={handleSelectStudent} />
         </div>
 
-        {/* Right Section: Real-time Autonomous Audit Timeline (4 cols on lg) */}
-        <div className="lg:col-span-4 sticky top-28">
+        {/* Right Section: Audit Timeline (4 cols) */}
+        <div className="lg:col-span-4">
           <AuditFeed />
         </div>
       </div>

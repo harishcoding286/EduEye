@@ -28,233 +28,219 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({ events, onEventClick
   );
 
   return (
-    <div className="rounded-[2.2rem] bg-white/75 backdrop-blur-2xl border-2 border-white/95 shadow-[0_16px_40px_rgba(147,197,253,0.2),inset_0_2px_4px_rgba(255,255,255,0.95)] p-8 flex flex-col h-full w-full relative overflow-hidden">
-      {/* Specular Top Sheen */}
-      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-white/90 to-transparent pointer-events-none" />
-
+    <div className="rounded-3xl bg-white/85 backdrop-blur-xl border border-white shadow-[0_12px_32px_-8px_rgba(51,104,160,0.12)] p-7 flex flex-col h-full w-full relative overflow-hidden">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-slate-200/60 mb-6 gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#C8DFDB]/60 mb-5 gap-3">
         <div>
-          <span className="text-[10px] font-black tracking-wider uppercase text-blue-500 block mb-0.5">
-            Adaptive Day Planner ☁️
+          <span className="text-[10px] font-black tracking-wider uppercase text-[#66A3BF] block mb-0.5">
+            Planner
           </span>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <span>Today's Schedule</span>
-            <span className="text-xl">📅</span>
+          <h2 className="text-xl font-black text-[#3368A0] tracking-tight">
+            Today's Schedule
           </h2>
-          <p className="text-xs font-semibold text-slate-500 mt-0.5">
-            Smart cognitive slots &amp; guaranteed lunch recharge 🥪
+          <p className="text-xs text-slate-500 mt-0.5">
+            Optimal cognitive slots and preserved lunch rest.
           </p>
         </div>
 
-        {/* View Switcher & Cute Legend */}
+        {/* View Switcher & Legend */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <div className="inline-flex rounded-2xl bg-white/90 p-1 border border-white shadow-sm text-xs">
+          <div className="inline-flex rounded-xl bg-[#C8DFDB]/30 p-1 border border-[#C8DFDB] text-xs">
             <button
               type="button"
               onClick={() => setViewMode('FLUID')}
-              className={`px-3 py-1 rounded-xl font-black transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
                 viewMode === 'FLUID'
-                  ? 'bg-gradient-to-r from-sky-400 to-blue-500 text-white shadow-sm'
-                  : 'text-slate-500 hover:text-slate-900'
+                  ? 'bg-[#3368A0] text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              🫧 Timeline
+              Timeline
             </button>
             <button
               type="button"
               onClick={() => setViewMode('FULLCALENDAR')}
-              className={`px-3 py-1 rounded-xl font-black transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
                 viewMode === 'FULLCALENDAR'
-                  ? 'bg-gradient-to-r from-sky-400 to-blue-500 text-white shadow-sm'
-                  : 'text-slate-500 hover:text-slate-900'
+                  ? 'bg-[#3368A0] text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              📅 FullCalendar.js
+              FullCalendar
             </button>
           </div>
 
-          <div className="flex items-center gap-2 text-xs font-black">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 shadow-sm">
-              <span>🎒</span> Class
+          <div className="flex items-center gap-1.5 text-xs font-bold">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#3368A0]/10 text-[#3368A0] border border-[#3368A0]/20">
+              Lecture
             </span>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-slate-600 shadow-sm">
-              <span>☕</span> Rest
+            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#C8DFDB]/40 text-slate-700 border border-[#C8DFDB]">
+              Rest
             </span>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 shadow-sm">
-              <span>⚡</span> Focus
+            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
+              Remediation
             </span>
           </div>
         </div>
       </div>
 
-      {/* Conditional View Rendering: FullCalendar.js or Fluid Timeline */}
+      {/* View Rendering */}
       {viewMode === 'FULLCALENDAR' ? (
         <div className="flex-1 overflow-y-auto">
           <FullCalendarView events={events} onEventClick={onEventClick} />
         </div>
       ) : (
-        /* Spacious Event Timeline */
-        <div className="space-y-4 overflow-y-auto pr-1 flex-1">
-        {sortedEvents.length === 0 ? (
-          <div className="py-20 text-center text-slate-400 text-sm font-bold">
-            No events scheduled for today. Time to relax! 🌈
-          </div>
-        ) : (
-          sortedEvents.map((event) => {
-            const isRemediation = event.category === 'REMEDIATION_LOCK';
-            const isClass = event.category === 'CLASS';
-            const isCompleted = event.status === 'COMPLETED';
+        <div className="space-y-3.5 overflow-y-auto pr-1 flex-1">
+          {sortedEvents.length === 0 ? (
+            <div className="py-16 text-center text-slate-400 text-xs font-semibold">
+              No events scheduled for today.
+            </div>
+          ) : (
+            sortedEvents.map((event) => {
+              const isRemediation = event.category === 'REMEDIATION_LOCK';
+              const isClass = event.category === 'CLASS';
+              const isCompleted = event.status === 'COMPLETED';
 
-            const startTime = formatTime(event.startTime);
-            const endTime = formatTime(event.endTime);
+              const startTime = formatTime(event.startTime);
+              const endTime = formatTime(event.endTime);
 
-            // ── Selective High-Gloss 3D Highlight: Remediation Focus Block ──
-            if (isRemediation) {
-              return (
-                <div
-                  key={event.id}
-                  onClick={() => onEventClick(event)}
-                  className={`min-h-[5.5rem] p-5 rounded-3xl transition-all cursor-pointer relative overflow-hidden group border-2 ${
-                    isCompleted
-                      ? 'bg-gradient-to-r from-emerald-100/90 via-teal-50/90 to-emerald-100/80 border-emerald-300 shadow-[inset_0_2px_4px_rgba(255,255,255,0.9),0_12px_28px_rgba(16,185,129,0.2)] hover:scale-[1.01]'
-                      : 'bg-gradient-to-r from-amber-100/95 via-yellow-50/95 to-amber-100/90 border-amber-400 shadow-[inset_0_2px_4px_rgba(255,255,255,0.95),0_14px_32px_rgba(245,158,11,0.32)] hover:scale-[1.01] hover:border-amber-500'
-                  }`}
-                >
-                  {/* Top Specular Gloss Line */}
-                  <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-white/95 to-transparent pointer-events-none" />
-
-                  {/* Left Accent Bar */}
+              // ── Remediation Focus Block ──
+              if (isRemediation) {
+                return (
                   <div
-                    className={`absolute top-0 left-0 bottom-0 w-2.5 ${
-                      isCompleted ? 'bg-emerald-500' : 'bg-gradient-to-b from-amber-400 to-amber-600 animate-pulse'
+                    key={event.id}
+                    onClick={() => onEventClick(event)}
+                    className={`p-4 rounded-2xl transition-all cursor-pointer relative overflow-hidden group border ${
+                      isCompleted
+                        ? 'bg-[#C8DFDB]/20 border-[#C8DFDB] hover:bg-[#C8DFDB]/30'
+                        : 'bg-amber-50/70 border-amber-300 hover:border-amber-400 hover:bg-amber-50'
                     }`}
-                  />
+                  >
+                    <div
+                      className={`absolute top-0 left-0 bottom-0 w-2 ${
+                        isCompleted ? 'bg-[#3368A0]' : 'bg-amber-500'
+                      }`}
+                    />
 
-                  <div className="flex items-center justify-between gap-4 pl-3.5">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2.5">
-                        <span
-                          className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border shadow-sm ${
-                            isCompleted
-                              ? 'bg-emerald-200/90 text-emerald-950 border-emerald-300'
-                              : 'bg-amber-300 text-amber-950 border-amber-400/90 animate-pulse'
-                          }`}
-                        >
-                          {isCompleted ? '🌸 Deficit Mastered!' : '⚡ 45-Min Focus Sprint'}
-                        </span>
-                        <span className="text-xs font-mono font-black text-slate-800">
-                          {startTime} – {endTime}
-                        </span>
-                        <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
-                          (Cognitive Peak Slot ✨)
-                        </span>
+                    <div className="flex items-center justify-between gap-4 pl-3">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${
+                              isCompleted
+                                ? 'bg-[#C8DFDB]/60 text-[#3368A0] border-[#C8DFDB]'
+                                : 'bg-amber-200 text-amber-900 border-amber-300'
+                            }`}
+                          >
+                            {isCompleted ? 'Deficit Cleared' : '45-Min Focus Sprint'}
+                          </span>
+                          <span className="text-xs font-mono font-bold text-slate-700">
+                            {startTime} – {endTime}
+                          </span>
+                        </div>
+
+                        <h3 className="font-bold text-slate-900 text-sm tracking-tight">
+                          {event.title}
+                        </h3>
+
+                        {event.topic && (
+                          <p className="text-xs text-slate-600 font-medium">
+                            Topic: <span className="font-bold text-slate-800">{event.topic}</span>
+                          </p>
+                        )}
                       </div>
 
-                      <h3 className="font-black text-slate-900 text-base tracking-tight group-hover:text-amber-950 transition-colors">
-                        {event.title}
-                      </h3>
-
-                      {event.topic && (
-                        <p className="text-xs font-semibold text-slate-600 flex items-center gap-1">
-                          <span>🎯 Target Topic:</span>
-                          <span className="font-black text-slate-900">{event.topic}</span>
-                        </p>
-                      )}
+                      <div className="shrink-0 text-right">
+                        {isCompleted ? (
+                          <span className="text-xs font-bold text-[#3368A0] bg-white px-3 py-1.5 rounded-xl border border-[#C8DFDB]">
+                            Mastered (+30 pts)
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            className="text-xs font-bold text-white bg-[#3368A0] hover:bg-[#2b5887] px-3.5 py-1.5 rounded-xl transition-all shadow-sm cursor-pointer"
+                          >
+                            Start Micro-Drill →
+                          </button>
+                        )}
+                      </div>
                     </div>
+                  </div>
+                );
+              }
 
-                    {/* High-Gloss Action Button */}
-                    <div className="shrink-0 text-right">
-                      {isCompleted ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-900 bg-white/90 px-4 py-2 rounded-2xl border border-emerald-300 shadow-sm">
-                          <span>✨</span> Mastered (+30 pts)
+              // ── Class Event Card ──
+              if (isClass) {
+                return (
+                  <div
+                    key={event.id}
+                    onClick={() => onEventClick(event)}
+                    className="p-3.5 rounded-2xl border border-[#C8DFDB] bg-white/70 hover:bg-white transition-all cursor-pointer pl-4 relative shadow-sm group"
+                  >
+                    <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-[#3368A0] rounded-l-2xl" />
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-[#3368A0] uppercase tracking-wider bg-[#3368A0]/10 px-2 py-0.5 rounded-md border border-[#3368A0]/20">
+                            Lecture
+                          </span>
+                          <span className="text-xs font-mono text-slate-600">
+                            {startTime} – {endTime}
+                          </span>
+                        </div>
+                        <h3 className="font-bold text-slate-800 text-xs mt-1">{event.title}</h3>
+                        {event.topic && (
+                          <span className="text-[11px] text-slate-500 font-normal">Topic: {event.topic}</span>
+                        )}
+                      </div>
+                      {event.status === 'COMPLETED' ? (
+                        <span className="text-xs text-[#3368A0] font-bold bg-[#C8DFDB]/30 px-2.5 py-0.5 rounded-lg border border-[#C8DFDB]">
+                          Attended
                         </span>
                       ) : (
-                        <button
-                          type="button"
-                          className="inline-flex items-center gap-1.5 text-xs font-black text-slate-950 bg-gradient-to-b from-amber-200 via-amber-300 to-amber-400 hover:from-amber-100 hover:to-amber-300 px-4 py-2.5 rounded-2xl border border-white shadow-[inset_0_2px_3px_rgba(255,255,255,0.9),0_6px_18px_rgba(245,158,11,0.35)] transition-all group-hover:scale-105 active:scale-95 cursor-pointer"
-                        >
-                          <span>✨</span> Start Micro-Drill →
-                        </button>
+                        <span className="text-xs text-slate-400 font-medium">Scheduled</span>
                       )}
                     </div>
                   </div>
-                </div>
-              );
-            }
+                );
+              }
 
-            // ── Clean Class Event Card ──
-            if (isClass) {
+              // ── Personal / Rest Event Card ──
               return (
                 <div
                   key={event.id}
                   onClick={() => onEventClick(event)}
-                  className="min-h-[4.5rem] p-4 rounded-2xl border-2 border-white/90 bg-white/80 hover:bg-white transition-all cursor-pointer pl-5 relative shadow-[0_4px_16px_rgba(96,165,250,0.12)] group hover:scale-[1.01]"
+                  className="p-3.5 rounded-2xl border border-slate-100 bg-white/50 hover:bg-white/75 transition-all cursor-pointer pl-4 relative shadow-xs group"
                 >
-                  <div className="absolute top-0 left-0 bottom-0 w-2 bg-gradient-to-b from-sky-400 to-blue-500 rounded-l-2xl" />
+                  <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-[#66A3BF] rounded-l-2xl" />
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black text-blue-700 uppercase tracking-wider bg-blue-100/80 px-2.5 py-0.5 rounded-lg border border-blue-200/60">
-                          🎒 Lecture
+                        <span className="text-[10px] font-bold text-[#66A3BF] uppercase tracking-wider bg-[#C8DFDB]/30 px-2 py-0.5 rounded-md border border-[#C8DFDB]">
+                          Rest / Personal
                         </span>
-                        <span className="text-xs font-mono font-bold text-slate-600">
+                        <span className="text-xs font-mono text-slate-500">
                           {startTime} – {endTime}
                         </span>
                       </div>
-                      <h3 className="font-black text-slate-800 text-sm mt-1">{event.title}</h3>
-                      {event.topic && (
-                        <span className="text-xs font-medium text-slate-500">Topic: {event.topic}</span>
-                      )}
+                      <h3 className="font-semibold text-slate-700 text-xs mt-1">{event.title}</h3>
                     </div>
-                    {event.status === 'COMPLETED' ? (
-                      <span className="text-xs text-emerald-600 font-black bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200">
-                        Attended ✓
-                      </span>
-                    ) : (
-                      <span className="text-xs text-slate-400 font-bold">Upcoming ☁️</span>
-                    )}
+                    <span className="text-xs text-slate-400 font-medium">Protected</span>
                   </div>
                 </div>
               );
-            }
-
-            // ── Clean Personal Event Card ──
-            return (
-              <div
-                key={event.id}
-                onClick={() => onEventClick(event)}
-                className="min-h-[4.5rem] p-4 rounded-2xl border-2 border-white/80 bg-white/60 hover:bg-white/85 transition-all cursor-pointer pl-5 relative shadow-sm group hover:scale-[1.01]"
-              >
-                <div className="absolute top-0 left-0 bottom-0 w-2 bg-gradient-to-b from-purple-300 to-indigo-300 rounded-l-2xl" />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black text-purple-700 uppercase tracking-wider bg-purple-100/70 px-2.5 py-0.5 rounded-lg border border-purple-200/50">
-                        ☕ Personal / Rest
-                      </span>
-                      <span className="text-xs font-mono font-bold text-slate-500">
-                        {startTime} – {endTime}
-                      </span>
-                    </div>
-                    <h3 className="font-bold text-slate-700 text-sm mt-1">{event.title}</h3>
-                  </div>
-                  <span className="text-xs text-slate-400 font-bold">Protected 🛡️</span>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
+            })
+          )}
+        </div>
       )}
 
       {/* Hourly Reference Markers */}
-      <div className="pt-5 border-t border-slate-200/60 mt-5">
-        <div className="flex justify-between text-[10px] font-black text-slate-400 font-mono">
+      <div className="pt-4 border-t border-[#C8DFDB]/60 mt-4">
+        <div className="flex justify-between text-[10px] font-bold text-slate-400 font-mono">
           <span>08:00</span>
           <span>10:00</span>
-          <span className="text-amber-600">12:00 (Lunch 🥪)</span>
-          <span className="text-blue-600">14:00 (Peak Focus ⚡)</span>
+          <span className="text-[#3368A0]">12:00 (Lunch)</span>
+          <span className="text-[#66A3BF]">14:00 (Focus Slot)</span>
           <span>16:00</span>
           <span>18:00</span>
           <span>20:00</span>

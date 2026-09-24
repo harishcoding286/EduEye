@@ -44,25 +44,25 @@ export function AuditFeed({ logs: propLogs, cohort: propCohort }: AuditFeedProps
     switch (actionType) {
       case 'AUTO_SCHEDULED':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black bg-sky-100 text-sky-800 border border-sky-300 shadow-sm">
-            ⚡ AUTO_SCHEDULED
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#C8DFDB]/50 text-[#3368A0] border border-[#C8DFDB]">
+            AUTO_SCHEDULED
           </span>
         );
       case 'QUIZ_RESOLVED':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-sm">
-            🌸 QUIZ_RESOLVED
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#3368A0]/10 text-[#3368A0] border border-[#3368A0]/20">
+            QUIZ_RESOLVED
           </span>
         );
       case 'TA_ESCALATED':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300 shadow-sm">
-            🚨 TA_ESCALATED
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-800 border border-rose-200">
+            TA_ESCALATED
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
             {actionType}
           </span>
         );
@@ -70,31 +70,26 @@ export function AuditFeed({ logs: propLogs, cohort: propCohort }: AuditFeedProps
   };
 
   return (
-    <div className="rounded-[2.2rem] bg-white/75 backdrop-blur-2xl border-2 border-white/95 shadow-[0_16px_40px_rgba(147,197,253,0.2),inset_0_2px_4px_rgba(255,255,255,0.95)] overflow-hidden flex flex-col h-full relative">
-      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-white/90 to-transparent pointer-events-none" />
-
+    <div className="rounded-3xl bg-white/85 backdrop-blur-xl border border-white shadow-[0_12px_32px_-8px_rgba(51,104,160,0.12)] overflow-hidden flex flex-col h-full relative">
       {/* Header */}
-      <div className="p-6 border-b border-slate-200/60 flex items-center justify-between bg-white/40">
+      <div className="p-5 border-b border-[#C8DFDB]/60 flex items-center justify-between">
         <div>
-          <h2 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <span>Autonomous Audit Feed</span>
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-            </span>
+          <h2 className="text-sm font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <span>Audit Feed</span>
+            <span className="inline-flex rounded-full h-2 w-2 bg-[#3368A0]"></span>
           </h2>
-          <p className="text-xs font-semibold text-slate-500 mt-0.5">Live execution telemetry stream ☁️</p>
+          <p className="text-[11px] text-slate-500 mt-0.5">Execution telemetry stream</p>
         </div>
-        <span className="text-[10px] font-mono font-black bg-white/90 text-slate-700 px-3 py-1 rounded-full border border-slate-200/80 shadow-sm">
-          {logs.length} events ✨
+        <span className="text-[10px] font-mono font-bold bg-[#C8DFDB]/30 text-[#3368A0] px-2.5 py-0.5 rounded-full border border-[#C8DFDB]">
+          {logs.length} events
         </span>
       </div>
 
       {/* Feed list */}
-      <div className="divide-y divide-slate-100/90 overflow-y-auto max-h-[580px] p-4 space-y-2.5">
+      <div className="divide-y divide-[#C8DFDB]/40 overflow-y-auto max-h-[580px] p-3 space-y-2">
         {logs.length === 0 ? (
-          <div className="py-12 text-center text-xs text-slate-400 font-bold">
-            No audit log entries recorded yet. ☁️
+          <div className="py-10 text-center text-xs text-slate-400">
+            No audit log entries recorded.
           </div>
         ) : (
           logs.map((log) => {
@@ -104,23 +99,23 @@ export function AuditFeed({ logs: propLogs, cohort: propCohort }: AuditFeedProps
             return (
               <div
                 key={log.id}
-                className="p-4 rounded-2xl hover:bg-white/90 transition-all flex items-start gap-3.5 bg-white/70 border border-white/90 shadow-sm"
+                className="p-3.5 rounded-xl hover:bg-[#C8DFDB]/15 transition-all flex items-start gap-3 bg-white/70 border border-[#C8DFDB]/60 shadow-xs"
               >
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2 mb-1.5">
-                    <span className="font-black text-xs text-slate-900 truncate">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="font-bold text-xs text-slate-900 truncate">
                       {studentName}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-mono font-bold shrink-0">
+                    <span className="text-[10px] text-slate-400 font-mono shrink-0">
                       {relativeTime}
                     </span>
                   </div>
 
-                  <div className="mb-2">
+                  <div className="mb-1.5">
                     {getActionBadge(log.actionType)}
                   </div>
 
-                  <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed font-medium">
+                  <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
                     {log.description}
                   </p>
                 </div>

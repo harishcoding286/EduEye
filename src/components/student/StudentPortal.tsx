@@ -137,42 +137,42 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8 flex flex-col gap-6">
-      {/* Playful Floating Glass Hero Greeting */}
-      <div className="rounded-[2.2rem] bg-white/70 backdrop-blur-2xl border-2 border-white/95 p-7 shadow-[0_16px_40px_rgba(147,197,253,0.22),inset_0_2px_4px_rgba(255,255,255,0.9)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6 flex flex-col gap-6">
+      {/* Minimal Greeting Banner */}
+      <div className="rounded-3xl bg-white/85 backdrop-blur-xl border border-white p-6 shadow-[0_12px_32px_-8px_rgba(51,104,160,0.12)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-xs font-black px-3 py-1 rounded-full bg-gradient-to-r from-pink-200 via-purple-200 to-sky-200 text-slate-800 border border-white shadow-sm flex items-center gap-1">
-              <span>🌸</span> Welcome Back!
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-bold text-[#66A3BF]">
+              Student Portal
             </span>
-            <span className="text-xs font-bold text-slate-500 font-mono">Term 2026-Q3 🫧</span>
+            <span className="text-slate-300">•</span>
+            <span className="text-xs font-mono text-slate-500">MATH-204</span>
           </div>
 
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <span>Hi Alex!</span>
-            <span className="text-2xl animate-bounce">✨</span>
+          <h1 className="text-2xl font-black text-[#3368A0] tracking-tight">
+            {activeProfile.name}
           </h1>
 
-          <p className="text-xs font-semibold text-slate-600 mt-1">
-            Your AI study buddy scheduled optimal focus slots and protected your lunch hour! ☁️🥪
+          <p className="text-xs text-slate-600 mt-0.5">
+            Cognitive focus schedule active. Lunch break and high-energy slots protected.
           </p>
         </div>
 
-        {/* Quick Quiz Drop Button */}
-        <div className="flex items-center gap-3">
+        {/* Action Button */}
+        <div>
           <button
             type="button"
             onClick={handleSimulateDrop}
-            className="px-4 py-2.5 rounded-2xl text-xs font-extrabold text-slate-800 bg-white/90 hover:bg-white border-2 border-white shadow-[0_6px_16px_rgba(147,197,253,0.25)] hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
+            className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#3368A0] hover:bg-[#2b5887] transition-all cursor-pointer shadow-sm"
           >
-            <span>⚡</span> Test Quiz Drop (38% Eigenvalues)
+            Simulate Quiz Drop (38%)
           </button>
         </div>
       </div>
 
-      {/* Desktop 2-Column Layout (40% / 60%) */}
+      {/* 2-Column Layout (40% / 60%) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column (~40% width -> 5 cols on lg) */}
+        {/* Left Column (5 cols) */}
         <div className="lg:col-span-5 w-full">
           <StudentHealthCard
             profile={activeProfile}
@@ -180,7 +180,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
           />
         </div>
 
-        {/* Right Column (~60% width -> 7 cols on lg) */}
+        {/* Right Column (7 cols) */}
         <div className="lg:col-span-7 w-full">
           <ScheduleGrid
             events={activeProfile.calendarEvents}
@@ -189,7 +189,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
         </div>
       </div>
 
-      {/* Interactive Micro-Drill Modal */}
+      {/* Micro-Drill Modal */}
       <RemediationModal
         quiz={quiz}
         isOpen={isModalOpen}

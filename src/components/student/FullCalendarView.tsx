@@ -13,39 +13,39 @@ export interface FullCalendarViewProps {
 }
 
 export const FullCalendarView: React.FC<FullCalendarViewProps> = ({ events, onEventClick }) => {
-  // Format events for FullCalendar
+  // Format events for FullCalendar using the #3368A0, #66A3BF, #C8DFDB scheme
   const fcEvents = events.map((evt) => {
     const isRemediation = evt.category === 'REMEDIATION_LOCK';
     const isCompleted = evt.status === 'COMPLETED';
     const isClass = evt.category === 'CLASS';
 
-    let bgColor = '#e0f2fe'; // Light blue
-    let borderColor = '#38bdf8';
-    let textColor = '#0369a1';
+    let bgColor = '#edf5f4'; // Light tint of #C8DFDB
+    let borderColor = '#C8DFDB';
+    let textColor = '#3368A0';
 
     if (isRemediation) {
       if (isCompleted) {
-        bgColor = '#d1fae5';
-        borderColor = '#34d399';
-        textColor = '#065f46';
+        bgColor = '#e6f2f0';
+        borderColor = '#66A3BF';
+        textColor = '#3368A0';
       } else {
-        bgColor = '#fef3c7';
+        bgColor = '#fffbeb';
         borderColor = '#f59e0b';
         textColor = '#92400e';
       }
     } else if (isClass) {
-      bgColor = '#dbeafe';
-      borderColor = '#60a5fa';
-      textColor = '#1e40af';
+      bgColor = '#eef5fc';
+      borderColor = '#66A3BF';
+      textColor = '#3368A0';
     } else {
-      bgColor = '#f1f5f9';
-      borderColor = '#cbd5e1';
-      textColor = '#475569';
+      bgColor = '#f8fafc';
+      borderColor = '#e2e8f0';
+      textColor = '#64748b';
     }
 
     return {
       id: evt.id,
-      title: `${isRemediation ? (isCompleted ? '🌸 ' : '⚡ ') : isClass ? '🎒 ' : '☕ '}${evt.title}`,
+      title: evt.title,
       start: evt.startTime,
       end: evt.endTime,
       backgroundColor: bgColor,
@@ -56,7 +56,7 @@ export const FullCalendarView: React.FC<FullCalendarViewProps> = ({ events, onEv
   });
 
   return (
-    <div className="fullcalendar-aero-container p-2 rounded-2xl bg-white/60 border border-white/90 shadow-inner">
+    <div className="fullcalendar-aero-container p-2 rounded-2xl bg-white/70 border border-[#C8DFDB] shadow-xs">
       <FullCalendar
         plugins={[timeGridPlugin, dayGridPlugin, interactionPlugin]}
         initialView="timeGridDay"

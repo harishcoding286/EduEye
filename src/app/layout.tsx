@@ -4,8 +4,8 @@ import { AppProvider } from '@/context/AppContext';
 import { AppNavbar } from '@/components/layout/AppNavbar';
 
 export const metadata: Metadata = {
-  title: 'EduEye 🫧✨ — Cute Frutiger Aero Study Engine',
-  description: 'Closed-Loop Cognitive Scheduling & Autonomous Gap Remediation with Cute Aesthetic',
+  title: 'EduEye — Cognitive Scheduling & Remediation',
+  description: 'Closed-Loop Cognitive Scheduling & Autonomous Gap Remediation',
 };
 
 export default function RootLayout({
@@ -15,7 +15,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen antialiased text-slate-800 relative selection:bg-pink-300 selection:text-slate-900">
+      <body className="min-h-screen antialiased text-slate-800 relative selection:bg-[#C8DFDB] selection:text-[#3368A0]">
         <AppProvider>
           <AppNavbar />
           <main className="relative z-10">{children}</main>
