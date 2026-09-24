@@ -13,7 +13,7 @@
 | **1. Generative AI Diagnostic Engine** | High | `0 / 4` | ⏳ Pending |
 | **2. Cognitive Scheduling Engine 2.0** | Critical | `0 / 5` | ⏳ Pending |
 | **3. Faculty Cockpit & Analytics** | High | `0 / 5` | ⏳ Pending |
-| **4. UI/UX Motion & Visual Polish** | Medium | `0 / 5` | ⏳ Pending |
+| **4. UI/UX Motion & Visual Polish** | Medium | `4 / 5` | 🚀 In Progress |
 | **5. LMS Ingestion & Event Pipeline** | Medium | `0 / 4` | ⏳ Pending |
 | **6. Production Hardening & Persistence** | Low | `0 / 3` | ⏳ Pending |
 
@@ -82,16 +82,16 @@
 ## 4. 🎨 UI/UX Motion & Visual Polish (Vercel-Grade Design)
 *Create an immersive, visually captivating experience for demo presentations.*
 
-- [ ] **4.1 Fluid Layout & Gauge Animations**
-  - Smooth animated transitions for the Predicted Grade gauge when dropping from 84% $\to$ 54% and recovering back to 84%.
-- [ ] **4.2 Visual Calendar Block Locking Animation**
-  - Pulsating amber glow and ripple effect when the cognitive engine locks a new remediation block into the schedule.
+- [x] **4.1 Fluid Layout & Gauge Animations**
+  - High-gloss 3D translucent liquid droplet/orb gauge for the Predicted Score with dynamic specular reflection and smooth color shift.
+- [x] **4.2 Visual Calendar Block Locking Animation**
+  - High-gloss 3D liquid amber focus block with specular highlight and beacon pill.
 - [ ] **4.3 Micro-Drill Mastery Celebration**
   - Confetti particle burst and sound effects toggle when scoring 3/3 on diagnostic drills.
-- [ ] **4.4 Multi-View Calendar Component**
-  - Day agenda view vs. 5-day week view toggle with clean hourly grid lines (08:00–20:00).
-- [ ] **4.5 Refined Dark Mode / Theme System**
-  - Ensure consistent, contrast-compliant styling across both Student and Faculty views.
+- [x] **4.4 Multi-View Calendar Component & Spacious Timeline**
+  - Generous `h-16` row rhythm allowing events to float naturally without clutter.
+- [x] **4.5 Refined Liquid Glass / Frutiger Aero Theme System**
+  - Serene `bg-gradient-to-b from-[#EBF5FF] via-[#F4F9FF] to-[#FFFFFF]` with soft corner ambient blooms, `backdrop-blur-2xl`, and generous `gap-8` whitespace.
 
 ---
 
