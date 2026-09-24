@@ -34,11 +34,11 @@ export function AppNavbar({ userName, role }: AppNavbarProps) {
   };
 
   return (
-    <header className="relative w-full px-4 sm:px-8 pt-6 pb-2">
-      {/* Static Glass Navbar */}
-      <div className="max-w-7xl mx-auto rounded-3xl bg-white/85 backdrop-blur-xl border border-white shadow-[0_12px_32px_-8px_rgba(51,104,160,0.12)] overflow-hidden">
+    <header className="relative z-30 w-full px-4 sm:px-8 pt-6 pb-2">
+      {/* Static Glass Navbar: NO overflow-hidden so the dropdown can float outside without being cut off */}
+      <div className="max-w-7xl mx-auto rounded-3xl bg-white/85 backdrop-blur-xl border border-white shadow-[0_12px_32px_-8px_rgba(51,104,160,0.12)]">
         {/* Top subtle border sheen */}
-        <div className="h-0.5 bg-[#C8DFDB]/60" />
+        <div className="h-0.5 bg-[#C8DFDB]/60 rounded-t-3xl" />
 
         <div className="px-6 py-3.5 flex items-center justify-between gap-4">
           {/* Brand: Logo & Wordmark (Solid #3368A0, No Gradient) */}
@@ -64,7 +64,7 @@ export function AppNavbar({ userName, role }: AppNavbarProps) {
 
           {/* Right: Persona Switcher */}
           <div className="flex items-center space-x-3">
-            <div className="relative">
+            <div className="relative z-50">
               <button
                 type="button"
                 onClick={() => setIsDropdownOpen((prev) => !prev)}
@@ -89,67 +89,73 @@ export function AppNavbar({ userName, role }: AppNavbarProps) {
 
               {/* Persona Switcher Dropdown */}
               {isDropdownOpen && (
-                <div
-                  className="absolute right-0 mt-2 w-56 rounded-2xl bg-white/95 backdrop-blur-2xl border border-[#C8DFDB] shadow-[0_16px_36px_rgba(51,104,160,0.15)] py-1.5 z-50 p-1"
-                  onMouseLeave={() => setIsDropdownOpen(false)}
-                >
-                  <div className="px-3 py-1.5 border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-[#66A3BF]">
-                    Select Persona
+                <>
+                  {/* Invisible backdrop to dismiss on outside click */}
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsDropdownOpen(false)}
+                  />
+                  <div
+                    className="absolute right-0 mt-2 w-56 rounded-2xl bg-white/95 backdrop-blur-2xl border border-[#C8DFDB] shadow-[0_20px_45px_rgba(51,104,160,0.22)] py-1.5 z-50 p-1 animate-in fade-in slide-in-from-top-1 duration-150"
+                  >
+                    <div className="px-3 py-1.5 border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-[#66A3BF]">
+                      Select Persona
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrentRole('STUDENT');
+                        setIsDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-xl flex items-center justify-between hover:bg-[#C8DFDB]/20 transition ${
+                        activeRole === 'STUDENT' ? 'bg-[#C8DFDB]/30 font-bold' : ''
+                      }`}
+                    >
+                      <div>
+                        <div className="text-xs font-bold text-slate-900">
+                          Alex Rivera
+                        </div>
+                        <div className="text-[11px] text-slate-500">Student</div>
+                      </div>
+                      {activeRole === 'STUDENT' && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#3368A0] text-white font-bold">
+                          ACTIVE
+                        </span>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrentRole('TEACHER');
+                        setIsDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-xl flex items-center justify-between hover:bg-[#C8DFDB]/20 transition ${
+                        activeRole === 'TEACHER' ? 'bg-[#C8DFDB]/30 font-bold' : ''
+                      }`}
+                    >
+                      <div>
+                        <div className="text-xs font-bold text-slate-900">
+                          Dr. Sarah Vance
+                        </div>
+                        <div className="text-[11px] text-slate-500">Course Director</div>
+                      </div>
+                      {activeRole === 'TEACHER' && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#3368A0] text-white font-bold">
+                          ACTIVE
+                        </span>
+                      )}
+                    </button>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCurrentRole('STUDENT');
-                      setIsDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 rounded-xl flex items-center justify-between hover:bg-[#C8DFDB]/20 transition ${
-                      activeRole === 'STUDENT' ? 'bg-[#C8DFDB]/30 font-bold' : ''
-                    }`}
-                  >
-                    <div>
-                      <div className="text-xs font-bold text-slate-900">
-                        Alex Rivera
-                      </div>
-                      <div className="text-[11px] text-slate-500">Student</div>
-                    </div>
-                    {activeRole === 'STUDENT' && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#3368A0] text-white font-bold">
-                        ACTIVE
-                      </span>
-                    )}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCurrentRole('TEACHER');
-                      setIsDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 rounded-xl flex items-center justify-between hover:bg-[#C8DFDB]/20 transition ${
-                      activeRole === 'TEACHER' ? 'bg-[#C8DFDB]/30 font-bold' : ''
-                    }`}
-                  >
-                    <div>
-                      <div className="text-xs font-bold text-slate-900">
-                        Dr. Sarah Vance
-                      </div>
-                      <div className="text-[11px] text-slate-500">Course Director</div>
-                    </div>
-                    {activeRole === 'TEACHER' && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#3368A0] text-white font-bold">
-                        ACTIVE
-                      </span>
-                    )}
-                  </button>
-                </div>
+                </>
               )}
             </div>
           </div>
         </div>
 
         {/* Minimal Demo Controller Bar */}
-        <div className="bg-[#C8DFDB]/25 border-t border-[#C8DFDB]/60 px-6 py-2">
+        <div className="bg-[#C8DFDB]/25 border-t border-[#C8DFDB]/60 px-6 py-2 rounded-b-3xl">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs font-bold text-[#3368A0]">
               Demo Controls
