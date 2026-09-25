@@ -88,23 +88,32 @@ Return valid JSON matching the provided schema exactly.`;
 
   try {
     const ai = new GoogleGenAI({ apiKey });
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-        responseJsonSchema: QUIZ_SCHEMA,
-        temperature: 0.7,
-        maxOutputTokens: 2048,
-      },
-    });
+    const modelsToTry = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-flash'];
+    let text = '';
+    let lastError: Error | null = null;
 
-    const text = response.text;
+    for (const model of modelsToTry) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            responseJsonSchema: QUIZ_SCHEMA,
+            temperature: 0.7,
+            maxOutputTokens: 2048,
+          },
+        });
+        text = response.text || '';
+        if (text) break;
+      } catch (err: unknown) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        console.warn(`[generate-quiz] Model ${model} failed, attempting next fallback:`, lastError.message);
+      }
+    }
+
     if (!text) {
-      return NextResponse.json(
-        { error: 'No content generated from Gemini API.' },
-        { status: 502 }
-      );
+      throw lastError || new Error('No content generated from Gemini API.');
     }
 
     const quiz = JSON.parse(text) as GeneratedQuiz;

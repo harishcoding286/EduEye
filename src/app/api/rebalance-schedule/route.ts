@@ -209,18 +209,34 @@ Return valid JSON adhering to the schema.`;
 
   try {
     const ai = new GoogleGenAI({ apiKey });
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-        responseJsonSchema: REBALANCE_SCHEMA,
-        temperature: 0.3,
-        maxOutputTokens: 4096,
-      },
-    });
+    const modelsToTry = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-flash'];
+    let text = '';
+    let lastError: Error | null = null;
 
-    let text = response.text?.trim() || '{}';
+    for (const model of modelsToTry) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            responseJsonSchema: REBALANCE_SCHEMA,
+            temperature: 0.3,
+            maxOutputTokens: 4096,
+          },
+        });
+        text = response.text?.trim() || '';
+        if (text) break;
+      } catch (err: unknown) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        console.warn(`[rebalance-schedule] Model ${model} failed, attempting next fallback:`, lastError.message);
+      }
+    }
+
+    if (!text) {
+      throw lastError || new Error('All Gemini model fallbacks exhausted.');
+    }
+
     // Remove accidental markdown fences if returned
     if (text.startsWith('```json')) {
       text = text.slice(7);
