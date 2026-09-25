@@ -1,0 +1,102 @@
+{
+  "stu_ram_001": {
+    "studentId": "stu_ram_001",
+    "chronotype": "MORNING",
+    "timezone": "Asia/Kolkata",
+    "weeklyBaselineEvents": [
+      {
+        "id": "base_college_mon",
+        "title": "College — Lectures",
+        "category": "CLASS",
+        "status": "SCHEDULED",
+        "dowPattern": [1, 2, 3, 4, 5],
+        "startHHMM": "09:30",
+        "endHHMM": "13:00",
+        "topic": "Scheduled Lectures"
+      },
+      {
+        "id": "base_lab_tue",
+        "title": "Lab Session — CS",
+        "category": "CLASS",
+        "status": "SCHEDULED",
+        "dowPattern": [2, 4],
+        "startHHMM": "14:00",
+        "endHHMM": "16:00",
+        "topic": "Lab Work"
+      },
+      {
+        "id": "base_lunch",
+        "title": "Lunch",
+        "category": "PERSONAL",
+        "status": "SCHEDULED",
+        "dowPattern": [1, 2, 3, 4, 5, 6, 0],
+        "startHHMM": "13:00",
+        "endHHMM": "14:00",
+        "topic": null
+      },
+      {
+        "id": "base_rest",
+        "title": "Rest & Downtime",
+        "category": "PERSONAL",
+        "status": "SCHEDULED",
+        "dowPattern": [1, 2, 3, 4, 5, 6, 0],
+        "startHHMM": "22:00",
+        "endHHMM": "23:59",
+        "topic": null
+      },
+      {
+        "id": "base_gym",
+        "title": "Gym / Exercise",
+        "category": "PERSONAL",
+        "status": "SCHEDULED",
+        "dowPattern": [1, 3, 5],
+        "startHHMM": "07:00",
+        "endHHMM": "08:00",
+        "topic": null
+      },
+      {
+        "id": "base_study_group",
+        "title": "DS Study Group",
+        "category": "PERSONAL",
+        "status": "SCHEDULED",
+        "dowPattern": [3],
+        "startHHMM": "17:00",
+        "endHHMM": "18:30",
+        "topic": "Data Structures"
+      },
+      {
+        "id": "base_weekend_morning",
+        "title": "Weekend Morning Block",
+        "category": "PERSONAL",
+        "status": "SCHEDULED",
+        "dowPattern": [6, 0],
+        "startHHMM": "09:00",
+        "endHHMM": "10:00",
+        "topic": null
+      }
+    ],
+    "upcomingExams": [
+      {
+        "subjectId": "sub_la",
+        "subjectName": "Linear Algebra",
+        "examType": "CAT3",
+        "examDate": "2026-10-15",
+        "priority": "CRITICAL"
+      },
+      {
+        "subjectId": "sub_cn",
+        "subjectName": "Computer Networks",
+        "examType": "CAT3",
+        "examDate": "2026-10-17",
+        "priority": "HIGH"
+      },
+      {
+        "subjectId": "sub_ds",
+        "subjectName": "Data Structures",
+        "examType": "CAT3",
+        "examDate": "2026-10-20",
+        "priority": "MEDIUM"
+      }
+    ]
+  }
+}

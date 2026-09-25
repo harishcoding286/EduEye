@@ -73,6 +73,7 @@ export function AppNavbar({ userName, role }: AppNavbarProps) {
               {[
                 { label: 'Dashboard', href: '/dashboard' },
                 { label: 'Analytics', href: '/analytics' },
+                { label: 'Schedule', href: '/schedule' },
               ].map(({ label, href }) => {
                 const active = pathname === href;
                 return (
