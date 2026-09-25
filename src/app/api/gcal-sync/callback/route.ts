@@ -1,8 +1,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // EduEye — Google Calendar OAuth Callback + Event Push
 // GET /api/gcal-sync/callback?code=...
-// Exchanges the auth code for tokens, then POSTs all schedule events to
-// the student's primary Google Calendar.
+// Exchanges the auth code for tokens, then pushes schedule events to Google Calendar.
+// Dynamically resolves redirect and return URLs so it never defaults to localhost.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { NextResponse, type NextRequest } from 'next/server';
@@ -11,11 +11,11 @@ import { computeStudentAnalytics } from '@/engine/studentAnalytics';
 import db from '@/data/student_database.json';
 import scheduleDb from '@/data/student_schedule.json';
 import type { StudentDatabase } from '@/types/student-db';
-import type { StudentScheduleDB, ScheduledEvent } from '@/types/schedule';
+import type { StudentScheduleDB } from '@/types/schedule';
+import { syncScheduleToGCal } from '@/lib/gcalService';
+import { getAppUrl } from '@/app/api/gcal-sync/route';
 
 export const runtime = 'nodejs';
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
 interface TokenResponse {
   access_token: string;
@@ -24,7 +24,7 @@ interface TokenResponse {
   token_type: string;
 }
 
-async function exchangeCodeForToken(code: string): Promise<TokenResponse> {
+async function exchangeCodeForToken(code: string, redirectUri: string): Promise<TokenResponse> {
   const res = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -32,32 +32,33 @@ async function exchangeCodeForToken(code: string): Promise<TokenResponse> {
       code,
       client_id: process.env.GOOGLE_CLIENT_ID!,
       client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-      redirect_uri: `${APP_URL}/api/gcal-sync/callback`,
+      redirect_uri: redirectUri,
       grant_type: 'authorization_code',
     }),
   });
   return res.json() as Promise<TokenResponse>;
 }
 
-import { syncScheduleToGCal } from '@/lib/gcalService';
-
 export async function GET(req: NextRequest) {
+  const appUrl = getAppUrl(req);
+  const redirectUri = `${appUrl}/api/gcal-sync/callback`;
+
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
-    return NextResponse.redirect(`${APP_URL}/schedule?gcal=error&reason=not_configured`);
+    return NextResponse.redirect(`${appUrl}/schedule?gcal=error&reason=not_configured`);
   }
 
   const code = req.nextUrl.searchParams.get('code');
   if (!code) {
-    return NextResponse.redirect(`${APP_URL}/schedule?gcal=error&reason=no_code`);
+    return NextResponse.redirect(`${appUrl}/schedule?gcal=error&reason=no_code`);
   }
 
   try {
-    const tokens = await exchangeCodeForToken(code);
+    const tokens = await exchangeCodeForToken(code, redirectUri);
     if (!tokens.access_token) {
-      return NextResponse.redirect(`${APP_URL}/schedule?gcal=error&reason=token_failed`);
+      return NextResponse.redirect(`${appUrl}/schedule?gcal=error&reason=token_failed`);
     }
 
     // Generate the 7-day adaptive schedule
@@ -67,7 +68,7 @@ export async function GET(req: NextRequest) {
     const scheduleRecord = typedScheduleDb[data.student.id];
 
     if (!scheduleRecord) {
-      return NextResponse.redirect(`${APP_URL}/schedule?gcal=error&reason=no_schedule`);
+      return NextResponse.redirect(`${appUrl}/schedule?gcal=error&reason=no_schedule`);
     }
 
     const result = generateAdaptiveSchedule(
@@ -81,7 +82,7 @@ export async function GET(req: NextRequest) {
     const syncRes = await syncScheduleToGCal(tokens.access_token, result.events);
 
     const response = NextResponse.redirect(
-      `${APP_URL}/schedule?gcal=success&synced=${syncRes.synced}&omitted=${syncRes.omitted}`,
+      `${appUrl}/schedule?gcal=success&synced=${syncRes.synced}&omitted=${syncRes.omitted}`,
     );
 
     // Store token in httpOnly cookie so dynamic Gemini updates can push without re-authenticating
@@ -107,6 +108,6 @@ export async function GET(req: NextRequest) {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'unknown';
     console.error('[gcal-sync/callback]', msg);
-    return NextResponse.redirect(`${APP_URL}/schedule?gcal=error&reason=push_failed`);
+    return NextResponse.redirect(`${appUrl}/schedule?gcal=error&reason=push_failed`);
   }
 }
