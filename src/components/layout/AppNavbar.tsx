@@ -56,7 +56,7 @@ export function AppNavbar({ userName }: AppNavbarProps) {
             </div>
           </div>
 
-          {/* Right: Persona Switcher */}
+          {/* Right: Navigation & Student Badge */}
           <div className="flex items-center space-x-3">
 
             {/* Nav links */}
