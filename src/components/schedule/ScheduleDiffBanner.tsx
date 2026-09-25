@@ -5,6 +5,7 @@ import type { ScheduleDiff } from '@/types/schedule';
 
 interface ScheduleDiffBannerProps {
   diffs: ScheduleDiff[];
+  aiRationale?: string;
   onDismiss: () => void;
 }
 
@@ -16,11 +17,11 @@ function formatTime(iso: string): string {
   return `${h12}:${m.toString().padStart(2, '0')} ${ampm}`;
 }
 
-export function ScheduleDiffBanner({ diffs, onDismiss }: ScheduleDiffBannerProps) {
-  if (diffs.length === 0) return null;
+export function ScheduleDiffBanner({ diffs, aiRationale, onDismiss }: ScheduleDiffBannerProps) {
+  if (diffs.length === 0 && !aiRationale) return null;
 
   return (
-    <div className="rounded-3xl bg-[#66A3BF]/10 border border-[#66A3BF]/40 overflow-hidden">
+    <div className="rounded-3xl bg-[#66A3BF]/10 border border-[#66A3BF]/40 overflow-hidden shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 bg-[#66A3BF]/15 border-b border-[#66A3BF]/30">
         <div className="flex items-center gap-3">
@@ -34,7 +35,7 @@ export function ScheduleDiffBanner({ diffs, onDismiss }: ScheduleDiffBannerProps
               Schedule Re-balance
             </p>
             <p className="text-xs font-bold text-slate-700">
-              {diffs.length} event{diffs.length > 1 ? 's' : ''} automatically rescheduled
+              {diffs.length > 0 ? `${diffs.length} event${diffs.length > 1 ? 's' : ''} automatically rescheduled` : 'AI Cognitive Plan Updated'}
             </p>
           </div>
         </div>
@@ -47,35 +48,49 @@ export function ScheduleDiffBanner({ diffs, onDismiss }: ScheduleDiffBannerProps
         </button>
       </div>
 
+      {/* AI Rationale Insight */}
+      {aiRationale && (
+        <div className="px-5 py-3 bg-white/70 border-b border-[#66A3BF]/20 text-xs flex items-start gap-2.5">
+          <span className="font-black text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#3368A0] text-white shrink-0 mt-0.5">
+            Gemini Rationale
+          </span>
+          <p className="text-slate-700 text-xs leading-relaxed font-medium">
+            {aiRationale}
+          </p>
+        </div>
+      )}
+
       {/* Diff list */}
-      <ul className="divide-y divide-[#C8DFDB]/50">
-        {diffs.map((diff) => (
-          <li key={diff.eventId} className="px-5 py-3 flex flex-col sm:flex-row sm:items-center gap-2">
-            {/* Event name */}
-            <span className="text-xs font-black text-slate-800 min-w-[140px]">
-              {diff.eventTitle}
-            </span>
-
-            {/* Arrow with times */}
-            <div className="flex items-center gap-2 text-[11px]">
-              <span className="px-2 py-0.5 rounded-lg bg-rose-100 text-rose-700 font-bold border border-rose-200 line-through">
-                {formatTime(diff.fromStart)}
+      {diffs.length > 0 && (
+        <ul className="divide-y divide-[#C8DFDB]/50">
+          {diffs.map((diff) => (
+            <li key={diff.eventId} className="px-5 py-3 flex flex-col sm:flex-row sm:items-center gap-2">
+              {/* Event name */}
+              <span className="text-xs font-black text-slate-800 min-w-[140px]">
+                {diff.eventTitle}
               </span>
-              <svg className="w-4 h-4 text-[#66A3BF]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-              <span className="px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-700 font-bold border border-emerald-200">
-                {formatTime(diff.toStart)}
-              </span>
-            </div>
 
-            {/* Reason */}
-            <p className="text-[10px] text-[#66A3BF] font-medium sm:ml-auto max-w-xs">
-              {diff.reason}
-            </p>
-          </li>
-        ))}
-      </ul>
+              {/* Arrow with times */}
+              <div className="flex items-center gap-2 text-[11px]">
+                <span className="px-2 py-0.5 rounded-lg bg-rose-100 text-rose-700 font-bold border border-rose-200 line-through">
+                  {formatTime(diff.fromStart)}
+                </span>
+                <svg className="w-4 h-4 text-[#66A3BF]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+                <span className="px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-700 font-bold border border-emerald-200">
+                  {formatTime(diff.toStart)}
+                </span>
+              </div>
+
+              {/* Reason */}
+              <p className="text-[10px] text-[#66A3BF] font-medium sm:ml-auto max-w-xs">
+                {diff.reason}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

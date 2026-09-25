@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import type { PluginDef } from '@fullcalendar/core';
 import type { AdaptiveScheduleResult, ScheduledEvent } from '@/types/schedule';
 import { ScheduleDiffBanner } from './ScheduleDiffBanner';
+import { RebalanceModal } from './RebalanceModal';
 import { downloadICS } from '@/lib/icsExport';
 
 // FullCalendar dynamically imported — avoids SSR window errors
@@ -21,6 +22,7 @@ const FullCalendar = dynamic(() => import('@fullcalendar/react').then((m) => m.d
 interface WeeklyCalendarViewProps {
   initialResult: AdaptiveScheduleResult;
   studentName: string;
+  studentId: string;
   onRebalance: () => AdaptiveScheduleResult;
 }
 
@@ -53,10 +55,16 @@ function LegendDot({ color, label }: { color: string; label: string }) {
   );
 }
 
-export function WeeklyCalendarView({ initialResult, studentName, onRebalance }: WeeklyCalendarViewProps) {
+export function WeeklyCalendarView({
+  initialResult,
+  studentName,
+  studentId,
+  onRebalance,
+}: WeeklyCalendarViewProps) {
   const searchParams = useSearchParams();
   const [result, setResult] = useState<AdaptiveScheduleResult>(initialResult);
   const [showDiffs, setShowDiffs] = useState(initialResult.diffs.length > 0);
+  const [isRebalanceModalOpen, setIsRebalanceModalOpen] = useState(false);
   const [gcalStatus, setGcalStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [gcalMessage, setGcalMessage] = useState('');
   const [selectedEvent, setSelectedEvent] = useState<ScheduledEvent | null>(null);
@@ -142,11 +150,11 @@ export function WeeklyCalendarView({ initialResult, studentName, onRebalance }: 
           {/* Re-balance button */}
           <button
             type="button"
-            onClick={handleRebalance}
+            onClick={() => setIsRebalanceModalOpen(true)}
             className="px-4 py-2 rounded-xl text-xs font-black text-white bg-[#3368A0] hover:bg-[#2b5887] transition flex items-center gap-2 cursor-pointer shadow-sm"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
             Re-balance with AI
           </button>
@@ -196,8 +204,12 @@ export function WeeklyCalendarView({ initialResult, studentName, onRebalance }: 
       </div>
 
       {/* Diff Banner */}
-      {showDiffs && result.diffs.length > 0 && (
-        <ScheduleDiffBanner diffs={result.diffs} onDismiss={() => setShowDiffs(false)} />
+      {showDiffs && (result.diffs.length > 0 || !!result.aiRationale) && (
+        <ScheduleDiffBanner
+          diffs={result.diffs}
+          aiRationale={result.aiRationale}
+          onDismiss={() => setShowDiffs(false)}
+        />
       )}
 
       {/* Legend */}
@@ -305,6 +317,19 @@ export function WeeklyCalendarView({ initialResult, studentName, onRebalance }: 
           </div>
         </div>
       )}
+
+      {/* AI Rebalance Modal */}
+      <RebalanceModal
+        isOpen={isRebalanceModalOpen}
+        onClose={() => setIsRebalanceModalOpen(false)}
+        currentSchedule={result}
+        studentId={studentId}
+        onScheduleUpdated={(newSchedule) => {
+          setResult(newSchedule);
+          setShowDiffs(true);
+          setSelectedEvent(null);
+        }}
+      />
     </div>
   );
 }

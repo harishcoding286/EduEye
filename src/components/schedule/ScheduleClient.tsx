@@ -48,6 +48,7 @@ export function ScheduleClient({
       <WeeklyCalendarView
         initialResult={initialResult}
         studentName={studentName}
+        studentId={studentId}
         onRebalance={handleRebalance}
       />
     </Suspense>

@@ -78,6 +78,7 @@ export interface AdaptiveScheduleResult {
   focusSlotsInjected: number;
   weekStart: string;
   weekEnd: string;
+  aiRationale?: string;
 }
 
 // ── Knowledge Graph ───────────────────────────────────────────────────────────
