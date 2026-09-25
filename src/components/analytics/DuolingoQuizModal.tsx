@@ -10,7 +10,8 @@ interface DuolingoQuizModalProps {
   avgScore: number;
   prefetchedQuiz?: GeneratedQuiz | null;
   onClose: () => void;
-  onRemediated: () => void;
+  onRemediated?: () => void;
+  onQuizCompleted?: (score: number, total: number) => void;
 }
 
 type Phase = 'LOADING' | 'QUIZ' | 'COMPLETE' | 'ERROR';
@@ -27,7 +28,7 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
   );
 }
 
-function XPRing({ score, total }: { score: number; total: number }) {
+function ScoreRing({ score, total }: { score: number; total: number }) {
   const pct = total === 0 ? 0 : score / total;
   const r = 54;
   const circ = 2 * Math.PI * r;
@@ -42,7 +43,7 @@ function XPRing({ score, total }: { score: number; total: number }) {
           cy="64"
           r={r}
           fill="none"
-          stroke="#3368A0"
+          stroke={score === total ? '#10B981' : score >= 6 ? '#3368A0' : '#F59E0B'}
           strokeWidth="10"
           strokeDasharray={`${dash} ${circ}`}
           strokeLinecap="round"
@@ -63,70 +64,122 @@ export function DuolingoQuizModal({
   avgScore,
   prefetchedQuiz,
   onClose,
-  onRemediated,
+  onQuizCompleted,
 }: DuolingoQuizModalProps) {
-  // If the quiz was pre-fetched, go straight to QUIZ; otherwise start with LOADING
-  const [phase, setPhase] = useState<Phase>(prefetchedQuiz ? 'QUIZ' : 'LOADING');
-  const [quiz, setQuiz] = useState<GeneratedQuiz | null>(prefetchedQuiz ?? null);
-  const [errorMsg, setErrorMsg] = useState('');
-
+  const [phase, setPhase] = useState<Phase>('LOADING');
+  const [quiz, setQuiz] = useState<GeneratedQuiz | null>(null);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [answered, setAnswered] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const fetchQuiz = useCallback(async () => {
+  const loadQuiz = useCallback(async () => {
+    // If a prefetched quiz is already available, use it immediately
+    if (prefetchedQuiz?.questions?.length) {
+      setQuiz(prefetchedQuiz);
+      setPhase('QUIZ');
+      return;
+    }
+
     setPhase('LOADING');
     setErrorMsg('');
+
     try {
-      const data = await fetchQuizWithRetry({ subject, weakTopics, avgScore });
+      const data = await fetchQuizWithRetry(
+        { subject, weakTopics, avgScore },
+        8 // max 8 attempts
+      );
       setQuiz(data);
       setPhase('QUIZ');
     } catch (err: unknown) {
-      setErrorMsg(err instanceof Error ? err.message : 'Unknown error');
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setErrorMsg(msg);
       setPhase('ERROR');
     }
-  }, [subject, weakTopics, avgScore]);
+  }, [subject, weakTopics, avgScore, prefetchedQuiz]);
 
-  // Only fetch in-modal if no quiz was pre-fetched (i.e. opened from error state)
   useEffect(() => {
-    if (!prefetchedQuiz) {
-      fetchQuiz();
-    }
-  }, [fetchQuiz, prefetchedQuiz]);
+    loadQuiz();
+  }, [loadQuiz]);
 
-  const currentQ: QuizQuestion | undefined = quiz?.questions[currentIdx];
-  const totalQ = quiz?.questions.length ?? 5;
+  const questions: QuizQuestion[] = quiz?.questions ?? [];
+  const totalQ = questions.length || 10;
+  const currentQ: QuizQuestion | undefined = questions[currentIdx];
 
-  function handleSelect(idx: number) {
+  const handleSelect = (idx: number) => {
     if (answered) return;
     setSelected(idx);
     setAnswered(true);
-    if (currentQ && idx === currentQ.correctIndex) {
-      setCorrectCount((c) => c + 1);
+    if (idx === currentQ?.correctIndex) {
+      setCorrectCount((prev) => prev + 1);
     }
-  }
+  };
 
-  function handleNext() {
-    if (currentIdx + 1 >= totalQ) {
-      setPhase('COMPLETE');
-    } else {
-      setCurrentIdx((i) => i + 1);
+  const handleNext = () => {
+    if (currentIdx + 1 < totalQ) {
+      setCurrentIdx((prev) => prev + 1);
       setSelected(null);
       setAnswered(false);
+    } else {
+      // Completed quiz
+      setPhase('COMPLETE');
+      onQuizCompleted?.(correctCount, totalQ);
+
+      // Increment learning streak in localStorage
+      if (typeof window !== 'undefined') {
+        const currentStreak = parseInt(localStorage.getItem('edueye_learning_streak') || '3', 10);
+        const newStreak = currentStreak + 1;
+        localStorage.setItem('edueye_learning_streak', String(newStreak));
+        window.dispatchEvent(new Event('edueye_streak_updated'));
+      }
     }
-  }
+  };
+
+  const handleRetake = () => {
+    setCurrentIdx(0);
+    setSelected(null);
+    setAnswered(false);
+    setCorrectCount(0);
+    setPhase('QUIZ');
+  };
 
   const isCorrect = answered && selected === currentQ?.correctIndex;
 
+  // Completion status messaging per requirements
+  const getCompletionMessage = () => {
+    if (correctCount === totalQ) {
+      return {
+        heading: 'perfect! good job!',
+        sub: 'You answered all questions correctly.',
+        color: 'text-emerald-700',
+      };
+    }
+    if (correctCount >= 6) {
+      return {
+        heading: 'good job keep practicing',
+        sub: `You scored ${correctCount}/${totalQ}. Great effort!`,
+        color: 'text-[#3368A0]',
+      };
+    }
+    return {
+      heading: 'try harder, i believe in you!',
+      sub: `You scored ${correctCount}/${totalQ}. Retake the drill to build your fundamentals.`,
+      color: 'text-amber-700',
+    };
+  };
+
+  const completionInfo = getCompletionMessage();
+  const canRetake = correctCount <= 5;
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div className="relative w-full max-w-xl bg-white/95 backdrop-blur-2xl border border-[#C8DFDB] rounded-3xl shadow-[0_24px_60px_rgba(51,104,160,0.2)] overflow-hidden flex flex-col">
         {/* ── HEADER ── */}
         <div className="bg-[#C8DFDB]/25 border-b border-[#C8DFDB]/60 px-6 py-4 flex items-center justify-between">
           <div>
             <p className="text-[10px] font-black uppercase tracking-widest text-[#66A3BF]">
-              AI Diagnostic Drill
+              AI Diagnostic Drill (10 Questions)
             </p>
             <h2 className="text-base font-black text-[#3368A0] tracking-tight">
               {subject}
@@ -148,7 +201,7 @@ export function DuolingoQuizModal({
             <div className="w-10 h-10 border-4 border-[#C8DFDB] border-t-[#3368A0] rounded-full animate-spin" />
             <div className="text-center">
               <p className="text-sm font-bold text-[#3368A0]">Generating your personalized quiz...</p>
-              <p className="text-xs text-slate-500 mt-1">Gemini AI is crafting 5 questions tailored to your weak areas</p>
+              <p className="text-xs text-slate-500 mt-1">Gemini AI is crafting 10 questions tailored to your weak areas</p>
             </div>
           </div>
         )}
@@ -162,79 +215,68 @@ export function DuolingoQuizModal({
               </svg>
             </div>
             <div>
-              <p className="text-sm font-bold text-rose-700">Could not load quiz</p>
-              <p className="text-xs text-slate-500 mt-1 max-w-xs">{errorMsg}</p>
+              <p className="text-sm font-black text-rose-800">Quiz Generation Failed</p>
+              <p className="text-xs text-slate-500 mt-1 max-w-sm">{errorMsg}</p>
             </div>
             <button
               type="button"
-              onClick={fetchQuiz}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#3368A0] hover:bg-[#2b5887] transition cursor-pointer"
+              onClick={loadQuiz}
+              className="px-5 py-2 rounded-xl text-xs font-black text-white bg-[#3368A0] hover:bg-[#2b5887] transition cursor-pointer"
             >
-              Retry
+              Try Again
             </button>
           </div>
         )}
 
-        {/* ── QUIZ ── */}
+        {/* ── ACTIVE QUIZ ── */}
         {phase === 'QUIZ' && currentQ && (
-          <div className="flex flex-col">
-            {/* Progress */}
-            <div className="px-6 pt-5 pb-3">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-2">
+          <div className="flex flex-col flex-1">
+            {/* Progress & count */}
+            <div className="px-6 pt-4 pb-2 flex flex-col gap-2">
+              <div className="flex items-center justify-between text-xs text-slate-500 font-bold">
                 <span>Question {currentIdx + 1} of {totalQ}</span>
-                <span className="text-[#3368A0]">{correctCount} correct</span>
+                <span className="text-[#3368A0] font-black">{correctCount} correct</span>
               </div>
               <ProgressBar current={currentIdx + (answered ? 1 : 0)} total={totalQ} />
             </div>
 
-            {/* Question */}
-            <div className="px-6 pb-4">
-              <h3 className="text-sm font-bold text-slate-900 leading-relaxed">
+            {/* Question prompt */}
+            <div className="px-6 py-4 flex-1">
+              <p className="text-sm font-black text-slate-900 leading-snug">
                 {currentQ.questionText}
-              </h3>
+              </p>
             </div>
 
-            {/* Options */}
-            <div className="px-6 pb-3 space-y-2.5">
-              {currentQ.options.map((opt, idx) => {
-                const isThisCorrect = idx === currentQ.correctIndex;
-                const isThisSelected = idx === selected;
-
-                let baseStyle =
-                  'border-[#C8DFDB] bg-white hover:border-[#66A3BF] hover:bg-[#C8DFDB]/10';
+            {/* 4 Options */}
+            <div className="px-6 pb-4 grid grid-cols-1 gap-2.5">
+              {currentQ.options.map((opt, i) => {
+                let btnStyle =
+                  'bg-white border-[#C8DFDB] text-slate-800 hover:border-[#3368A0] hover:bg-[#C8DFDB]/10';
 
                 if (answered) {
-                  if (isThisCorrect) {
-                    baseStyle =
-                      'border-emerald-400 bg-emerald-50 text-emerald-900';
-                  } else if (isThisSelected) {
-                    baseStyle = 'border-rose-400 bg-rose-50 text-rose-900';
+                  if (i === currentQ.correctIndex) {
+                    btnStyle = 'bg-emerald-50 border-emerald-400 text-emerald-900 font-bold';
+                  } else if (i === selected) {
+                    btnStyle = 'bg-rose-50 border-rose-400 text-rose-900 line-through';
                   } else {
-                    baseStyle = 'border-slate-200 bg-slate-50/50 text-slate-400 opacity-60';
+                    btnStyle = 'bg-slate-50 border-slate-200 text-slate-400 opacity-60';
                   }
                 }
 
                 return (
                   <button
-                    key={idx}
+                    key={opt}
                     type="button"
                     disabled={answered}
-                    onClick={() => handleSelect(idx)}
-                    className={`w-full text-left p-3.5 rounded-2xl border-2 transition-all flex items-center gap-3 text-sm font-medium cursor-pointer active:scale-[0.98] hover:scale-[1.01] ${baseStyle}`}
+                    onClick={() => handleSelect(i)}
+                    className={`w-full text-left px-4 py-3 rounded-2xl border text-xs font-bold transition-all flex items-center justify-between cursor-pointer disabled:cursor-default ${btnStyle}`}
                   >
-                    <span className="w-7 h-7 rounded-xl bg-slate-100 border border-slate-200 text-xs font-black text-slate-700 flex items-center justify-center shrink-0">
-                      {String.fromCharCode(65 + idx)}
-                    </span>
                     <span>{opt}</span>
-                    {answered && isThisCorrect && (
-                      <span className="ml-auto text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
-                        Correct
-                      </span>
+                    {answered && i === currentQ.correctIndex && (
+                      <span className="text-emerald-600 font-black text-sm">✓</span>
                     )}
-                    {answered && isThisSelected && !isThisCorrect && (
-                      <span className="ml-auto text-[10px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-md">
-                        Wrong
-                      </span>
+                    {answered && i === selected && i !== currentQ.correctIndex && (
+                      <span className="text-rose-500 font-black text-sm">✗</span>
                     )}
                   </button>
                 );
@@ -257,16 +299,9 @@ export function DuolingoQuizModal({
                 >
                   {isCorrect ? 'Nicely done!' : 'Not quite!'}
                 </p>
-                {!isCorrect && (
-                  <p className="text-xs text-slate-700 leading-relaxed">
-                    {currentQ.remediationInsight}
-                  </p>
-                )}
-                {isCorrect && (
-                  <p className="text-xs text-emerald-700 leading-relaxed">
-                    {currentQ.remediationInsight}
-                  </p>
-                )}
+                <p className="text-xs text-slate-700 leading-relaxed">
+                  {currentQ.remediationInsight}
+                </p>
                 <button
                   type="button"
                   onClick={handleNext}
@@ -286,52 +321,53 @@ export function DuolingoQuizModal({
               <p className="text-[10px] font-black uppercase tracking-widest text-[#66A3BF] mb-1">
                 Drill Complete
               </p>
-              <h3 className="text-xl font-black text-slate-900">
-                {correctCount >= 4 ? 'Excellent Work!' : correctCount >= 3 ? 'Good Effort!' : 'Keep Practicing!'}
+              <h3 className={`text-xl font-black ${completionInfo.color}`}>
+                {completionInfo.heading}
               </h3>
+              <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                {completionInfo.sub}
+              </p>
             </div>
 
-            <XPRing score={correctCount} total={totalQ} />
+            {/* Clean Score Ring without XP / Mastery */}
+            <ScoreRing score={correctCount} total={totalQ} />
 
-            <div className="flex items-center gap-4 text-center">
-              <div className="px-4 py-2 rounded-xl bg-[#C8DFDB]/30 border border-[#C8DFDB]">
-                <div className="text-[10px] font-black text-[#66A3BF] uppercase">Mastery</div>
-                <div className="text-lg font-black text-[#3368A0]">
-                  {Math.round((correctCount / totalQ) * 100)}%
-                </div>
-              </div>
-              <div className="px-4 py-2 rounded-xl bg-[#C8DFDB]/30 border border-[#C8DFDB]">
-                <div className="text-[10px] font-black text-[#66A3BF] uppercase">XP Earned</div>
-                <div className="text-lg font-black text-[#3368A0]">
-                  +{correctCount * 20}
-                </div>
-              </div>
-            </div>
-
-            <p className="text-xs text-slate-500 max-w-xs leading-relaxed">
-              {correctCount >= 4
-                ? `Great progress on ${subject}! Your understanding of core concepts has improved.`
-                : `Review the concepts above and try again to strengthen your understanding of ${subject}.`}
-            </p>
-
-            <div className="flex gap-3 w-full">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 border border-slate-200 transition cursor-pointer"
-              >
-                Back to Analytics
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onRemediated();
-                  onClose();
-                }}
-                className="flex-1 py-2.5 rounded-xl text-xs font-black text-white bg-[#3368A0] hover:bg-[#2b5887] transition cursor-pointer"
-              >
-                Mark as Remediated
-              </button>
+            <div className="flex gap-3 w-full mt-2">
+              {canRetake ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleRetake}
+                    className="flex-1 py-2.5 rounded-xl text-xs font-black text-white bg-[#3368A0] hover:bg-[#2b5887] transition cursor-pointer"
+                  >
+                    Retake Quiz
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 border border-slate-200 transition cursor-pointer"
+                  >
+                    Back to Analytics
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="flex-1 py-2.5 rounded-xl text-xs font-black text-white bg-[#3368A0] hover:bg-[#2b5887] transition cursor-pointer"
+                  >
+                    Back to Analytics
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRetake}
+                    className="py-2.5 px-4 rounded-xl text-xs font-semibold text-[#3368A0] hover:bg-[#C8DFDB]/30 border border-[#C8DFDB] transition cursor-pointer"
+                  >
+                    Practice Again
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}

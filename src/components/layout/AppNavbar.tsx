@@ -37,7 +37,7 @@ export function AppNavbar({ userName, role }: AppNavbarProps) {
   };
 
   return (
-    <header className="relative z-30 w-full px-4 sm:px-8 pt-6 pb-2">
+    <header className="relative z-10 w-full px-4 sm:px-8 pt-6 pb-2">
       {/* Static Glass Navbar: NO overflow-hidden so the dropdown can float outside without being cut off */}
       <div className="max-w-7xl mx-auto rounded-3xl bg-white/85 backdrop-blur-xl border border-white shadow-[0_12px_32px_-8px_rgba(51,104,160,0.12)]">
         {/* Top subtle border sheen */}
@@ -57,9 +57,6 @@ export function AppNavbar({ userName, role }: AppNavbarProps) {
               <div className="flex items-center space-x-2">
                 <span className="font-black text-2xl tracking-tight text-[#3368A0]">
                   EduEye
-                </span>
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#C8DFDB]/40 text-[#3368A0] border border-[#C8DFDB]">
-                  Autonomous Engine
                 </span>
               </div>
             </div>

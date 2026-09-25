@@ -18,7 +18,7 @@ export default function RootLayout({
       <body className="min-h-screen antialiased text-slate-800 relative selection:bg-[#C8DFDB] selection:text-[#3368A0]">
         <AppProvider>
           <AppNavbar />
-          <main className="relative z-10">{children}</main>
+          <main className="relative">{children}</main>
         </AppProvider>
       </body>
     </html>

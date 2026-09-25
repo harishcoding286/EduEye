@@ -10,8 +10,8 @@ const QUIZ_SCHEMA = {
     subject: { type: Type.STRING, description: 'Subject name for the quiz' },
     questions: {
       type: Type.ARRAY,
-      minItems: 5,
-      maxItems: 5,
+      minItems: 10,
+      maxItems: 10,
       items: {
         type: Type.OBJECT,
         properties: {
@@ -77,7 +77,7 @@ export async function POST(req: Request) {
 His average CAT score in this subject is ${Math.round(avgScore)}%.
 His known weak areas are: ${weakTopics.join(', ')}.
 
-Generate exactly 5 diagnostic multiple-choice questions that:
+Generate exactly 10 diagnostic multiple-choice questions that:
 - Target his specific weak concepts
 - Test fundamental understanding, not trivia
 - Have exactly 4 options each
@@ -101,7 +101,7 @@ Return valid JSON matching the provided schema exactly.`;
             responseMimeType: 'application/json',
             responseJsonSchema: QUIZ_SCHEMA,
             temperature: 0.7,
-            maxOutputTokens: 2048,
+            maxOutputTokens: 4096,
           },
         });
         text = response.text || '';
