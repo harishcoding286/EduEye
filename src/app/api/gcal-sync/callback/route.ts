@@ -39,7 +39,7 @@ async function exchangeCodeForToken(code: string): Promise<TokenResponse> {
   return res.json() as Promise<TokenResponse>;
 }
 
-import { upsertGCalEvent, cleanupDuplicateGCalEvents, getDeterministicGCalId } from '@/lib/gcalService';
+import { syncScheduleToGCal } from '@/lib/gcalService';
 
 export async function GET(req: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -77,26 +77,11 @@ export async function GET(req: NextRequest) {
       new Date(),
     );
 
-    // Push focus and revision events idempotently with deterministic IDs
-    const focusEvents = result.events.filter((e) => e.category === 'REMEDIATION_LOCK');
-    const validIds = new Set<string>();
-
-    for (const ev of focusEvents) {
-      await upsertGCalEvent(tokens.access_token, ev);
-      validIds.add(getDeterministicGCalId(ev));
-    }
-
-    if (focusEvents.length > 0) {
-      cleanupDuplicateGCalEvents(
-        tokens.access_token,
-        focusEvents[0].start,
-        focusEvents[focusEvents.length - 1].end,
-        validIds
-      ).catch(() => {});
-    }
+    // Sync focus and revision events while omitting any existing events on the same hour
+    const syncRes = await syncScheduleToGCal(tokens.access_token, result.events);
 
     const response = NextResponse.redirect(
-      `${APP_URL}/schedule?gcal=success&synced=${focusEvents.length}`,
+      `${APP_URL}/schedule?gcal=success&synced=${syncRes.synced}&omitted=${syncRes.omitted}`,
     );
 
     // Store token in httpOnly cookie so dynamic Gemini updates can push without re-authenticating

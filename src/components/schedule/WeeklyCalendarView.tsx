@@ -87,10 +87,10 @@ export function WeeklyCalendarView({
   useEffect(() => {
     const gcal = searchParams.get('gcal');
     const synced = searchParams.get('synced');
+    const omitted = searchParams.get('omitted');
     const reason = searchParams.get('reason');
 
     if (gcal === 'success') {
-      // Check if there are pending events saved before OAuth redirect
       const pendingStr = typeof window !== 'undefined' ? sessionStorage.getItem('edueye_pending_gcal_events') : null;
       if (pendingStr) {
         sessionStorage.removeItem('edueye_pending_gcal_events');
@@ -103,10 +103,8 @@ export function WeeklyCalendarView({
           })
             .then((r) => r.json())
             .then((data) => {
-              if (data.synced) {
-                setGcalStatus('success');
-                setGcalMessage(`${data.synced} events (including custom AI focus sessions) synced to Google Calendar.`);
-              }
+              setGcalStatus('success');
+              setGcalMessage(`${data.synced || synced} events synced to Google Calendar (${data.omitted || omitted || 0} duplicate hours omitted).`);
             })
             .catch(() => {
               setGcalStatus('success');
@@ -118,12 +116,12 @@ export function WeeklyCalendarView({
         }
       } else {
         setGcalStatus('success');
-        setGcalMessage(`${synced} events synced to Google Calendar.`);
+        setGcalMessage(`${synced} events synced to Google Calendar (${omitted || 0} duplicate hours omitted).`);
       }
     } else if (gcal === 'error') {
       setGcalStatus('error');
       const messages: Record<string, string> = {
-        not_configured: 'Add GOOGLE_CLIENT_ID & GOOGLE_CLIENT_SECRET to .env.local to enable sync.',
+        not_configured: 'Add GOOGLE_CLIENT_ID & GOOGLE_CLIENT_SECRET to Vercel/env to enable sync.',
         token_failed: 'OAuth token exchange failed. Try again.',
         push_failed: 'Events generated but push to Google Calendar failed.',
       };
@@ -131,37 +129,17 @@ export function WeeklyCalendarView({
     }
   }, [searchParams]);
 
-  // Deterministic schedule fingerprint to detect changes
-  const scheduleFingerprint = useMemo(() => {
-    return result.events
-      .filter((e) => e.category === 'REMEDIATION_LOCK' || e.isRescheduled)
-      .map((e) => `${e.id}:${e.start}:${e.end}`)
-      .join('|');
-  }, [result.events]);
-
-  // Automatic Google Calendar sync on site open (throttled by 12h + fingerprint)
+  // Automatic Google Calendar sync on site open:
+  // Calls push API; backend omits events already made on the same hour and adds all others.
   useEffect(() => {
-    if (!scheduleFingerprint) return;
+    if (!result.events || result.events.length === 0) return;
 
-    const lastSyncedFingerprint =
-      typeof window !== 'undefined'
-        ? localStorage.getItem('edueye_last_synced_fingerprint')
-        : null;
-    const lastSyncTimeStr =
-      typeof window !== 'undefined'
-        ? localStorage.getItem('edueye_last_synced_time')
-        : null;
-    const lastSyncTime = lastSyncTimeStr ? parseInt(lastSyncTimeStr, 10) : 0;
-    const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
-
-    // Skip if already in sync and schedule has not changed
-    if (lastSyncedFingerprint === scheduleFingerprint && lastSyncTime > twelveHoursAgo) {
-      setGcalStatus('success');
-      setGcalMessage('Google Calendar is in sync.');
+    // Check if we already synced in this current browser session
+    const sessionSynced = typeof window !== 'undefined' ? sessionStorage.getItem('edueye_synced_session') : null;
+    if (sessionSynced === 'true') {
       return;
     }
 
-    // Perform silent background sync
     fetch('/api/gcal-sync/push', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -171,18 +149,21 @@ export function WeeklyCalendarView({
         if (res.ok) {
           const data = await res.json();
           if (typeof window !== 'undefined') {
-            localStorage.setItem('edueye_last_synced_fingerprint', scheduleFingerprint);
-            localStorage.setItem('edueye_last_synced_time', Date.now().toString());
+            sessionStorage.setItem('edueye_synced_session', 'true');
           }
           setGcalStatus('success');
-          setGcalMessage(`Calendar automatically synced (${data.synced} events verified).`);
+          if (data.synced > 0) {
+            setGcalMessage(`${data.synced} events added to Google Calendar (${data.omitted} duplicate hours omitted).`);
+          } else {
+            setGcalMessage(`Google Calendar up to date (${data.omitted} scheduled events active).`);
+          }
         } else if (res.status === 401) {
           setGcalStatus('idle');
           setGcalMessage('Connect Google Calendar to enable auto-sync.');
         }
       })
       .catch(() => {});
-  }, [scheduleFingerprint, result.events]);
+  }, [result.events]);
 
   const handleRebalance = useCallback(() => {
     const newResult = onRebalance();
@@ -204,11 +185,14 @@ export function WeeklyCalendarView({
       if (res.ok) {
         const data = await res.json();
         if (typeof window !== 'undefined') {
-          localStorage.setItem('edueye_last_synced_fingerprint', scheduleFingerprint);
-          localStorage.setItem('edueye_last_synced_time', Date.now().toString());
+          sessionStorage.setItem('edueye_synced_session', 'true');
         }
         setGcalStatus('success');
-        setGcalMessage(`${data.synced} events verified in Google Calendar.`);
+        if (data.synced > 0) {
+          setGcalMessage(`${data.synced} events added to Google Calendar (${data.omitted} duplicate hours omitted).`);
+        } else {
+          setGcalMessage(`Google Calendar is up to date (${data.omitted} events active).`);
+        }
         return;
       }
 
@@ -225,7 +209,7 @@ export function WeeklyCalendarView({
       setGcalStatus('error');
       setGcalMessage('Google Calendar sync failed. Check your connection or authorize.');
     }
-  }, [result.events, scheduleFingerprint]);
+  }, [result.events]);
 
   const handleExportICS = useCallback(() => {
     downloadICS(result.events, `edueye-${result.weekStart}.ics`);
