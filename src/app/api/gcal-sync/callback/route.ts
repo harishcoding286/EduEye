@@ -92,13 +92,34 @@ export async function GET(req: NextRequest) {
       new Date(),
     );
 
-    // Push focus sprint events only (avoid duplicating baseline/personal events)
+    // Push focus sprint events initially
     const focusEvents = result.events.filter((e) => e.category === 'REMEDIATION_LOCK');
     await Promise.all(focusEvents.map((ev) => pushEventToGCal(tokens.access_token, ev)));
 
-    return NextResponse.redirect(
+    const response = NextResponse.redirect(
       `${APP_URL}/schedule?gcal=success&synced=${focusEvents.length}`,
     );
+
+    // Store token in httpOnly cookie so dynamic Gemini updates can push without re-authenticating
+    response.cookies.set('gcal_access_token', tokens.access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: tokens.expires_in || 3600,
+    });
+
+    if (tokens.refresh_token) {
+      response.cookies.set('gcal_refresh_token', tokens.refresh_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 30 * 24 * 3600,
+      });
+    }
+
+    return response;
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'unknown';
     console.error('[gcal-sync/callback]', msg);

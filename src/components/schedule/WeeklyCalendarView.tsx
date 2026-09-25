@@ -88,9 +88,38 @@ export function WeeklyCalendarView({
     const gcal = searchParams.get('gcal');
     const synced = searchParams.get('synced');
     const reason = searchParams.get('reason');
+
     if (gcal === 'success') {
-      setGcalStatus('success');
-      setGcalMessage(`${synced} focus events synced to Google Calendar.`);
+      // Check if there are pending events saved before OAuth redirect
+      const pendingStr = typeof window !== 'undefined' ? sessionStorage.getItem('edueye_pending_gcal_events') : null;
+      if (pendingStr) {
+        sessionStorage.removeItem('edueye_pending_gcal_events');
+        try {
+          const pendingEvents = JSON.parse(pendingStr);
+          fetch('/api/gcal-sync/push', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ events: pendingEvents }),
+          })
+            .then((r) => r.json())
+            .then((data) => {
+              if (data.synced) {
+                setGcalStatus('success');
+                setGcalMessage(`${data.synced} events (including custom AI focus sessions) synced to Google Calendar.`);
+              }
+            })
+            .catch(() => {
+              setGcalStatus('success');
+              setGcalMessage(`${synced} events synced to Google Calendar.`);
+            });
+        } catch {
+          setGcalStatus('success');
+          setGcalMessage(`${synced} events synced to Google Calendar.`);
+        }
+      } else {
+        setGcalStatus('success');
+        setGcalMessage(`${synced} events synced to Google Calendar.`);
+      }
     } else if (gcal === 'error') {
       setGcalStatus('error');
       const messages: Record<string, string> = {
@@ -109,11 +138,39 @@ export function WeeklyCalendarView({
     setSelectedEvent(null);
   }, [onRebalance]);
 
-  const handleGCalSync = useCallback(() => {
+  const handleGCalSync = useCallback(async () => {
     setGcalStatus('syncing');
-    // Redirect to OAuth flow; page will return with ?gcal=success or ?gcal=error
-    window.location.href = '/api/gcal-sync';
-  }, []);
+    setGcalMessage('Syncing active schedule to Google Calendar...');
+    try {
+      // First attempt direct push using existing session token
+      const res = await fetch('/api/gcal-sync/push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ events: result.events }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setGcalStatus('success');
+        setGcalMessage(`${data.synced} events successfully synced to Google Calendar.`);
+        return;
+      }
+
+      if (res.status === 401) {
+        // Not authenticated yet — stash current events so callback can push them immediately after OAuth
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('edueye_pending_gcal_events', JSON.stringify(result.events));
+        }
+        window.location.href = '/api/gcal-sync';
+        return;
+      }
+
+      throw new Error('Failed to push events');
+    } catch {
+      setGcalStatus('error');
+      setGcalMessage('Google Calendar sync failed. Check your connection or authorize.');
+    }
+  }, [result.events]);
 
   const handleExportICS = useCallback(() => {
     downloadICS(result.events, `edueye-${result.weekStart}.ics`);

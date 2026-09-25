@@ -27,6 +27,7 @@ export function RebalanceModal({
   onScheduleUpdated,
 }: RebalanceModalProps) {
   const [feedback, setFeedback] = useState('');
+  const [autoSyncGCal, setAutoSyncGCal] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -54,7 +55,29 @@ export function RebalanceModal({
         throw new Error(data.error || 'Failed to re-balance schedule with AI.');
       }
 
-      onScheduleUpdated(data as AdaptiveScheduleResult);
+      const scheduleResult = data as AdaptiveScheduleResult;
+
+      // Automatically push updated events to Google Calendar if enabled and authorized
+      if (autoSyncGCal && scheduleResult.events?.length) {
+        try {
+          const pushRes = await fetch('/api/gcal-sync/push', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ events: scheduleResult.events }),
+          });
+
+          if (pushRes.ok) {
+            const pushData = await pushRes.json();
+            if (pushData.synced > 0) {
+              scheduleResult.aiRationale = `${scheduleResult.aiRationale || ''} (${pushData.synced} events synchronized to Google Calendar)`;
+            }
+          }
+        } catch {
+          // Gracefully continue if Google Calendar is offline or not yet authorized
+        }
+      }
+
+      onScheduleUpdated(scheduleResult);
       onClose();
     } catch (err: unknown) {
       console.error('Rebalance error:', err);
@@ -130,12 +153,19 @@ export function RebalanceModal({
             />
           </div>
 
-          {/* Error Message */}
-          {errorMsg && (
-            <div className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-800 font-medium">
-              {errorMsg}
-            </div>
-          )}
+          {/* Google Calendar Sync Option */}
+          <div className="flex items-center gap-2 px-1">
+            <input
+              type="checkbox"
+              id="gcal-toggle"
+              checked={autoSyncGCal}
+              onChange={(e) => setAutoSyncGCal(e.target.checked)}
+              className="w-4 h-4 rounded text-[#3368A0] border-[#C8DFDB] focus:ring-[#3368A0]"
+            />
+            <label htmlFor="gcal-toggle" className="text-[11px] font-bold text-slate-700 cursor-pointer select-none">
+              Automatically sync revised timetable to Google Calendar
+            </label>
+          </div>
 
           {/* Action Buttons */}
           <div className="flex items-center justify-end gap-2.5 pt-2">
