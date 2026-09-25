@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, Suspense } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import type { PluginDef } from '@fullcalendar/core';
@@ -131,6 +131,59 @@ export function WeeklyCalendarView({
     }
   }, [searchParams]);
 
+  // Deterministic schedule fingerprint to detect changes
+  const scheduleFingerprint = useMemo(() => {
+    return result.events
+      .filter((e) => e.category === 'REMEDIATION_LOCK' || e.isRescheduled)
+      .map((e) => `${e.id}:${e.start}:${e.end}`)
+      .join('|');
+  }, [result.events]);
+
+  // Automatic Google Calendar sync on site open (throttled by 12h + fingerprint)
+  useEffect(() => {
+    if (!scheduleFingerprint) return;
+
+    const lastSyncedFingerprint =
+      typeof window !== 'undefined'
+        ? localStorage.getItem('edueye_last_synced_fingerprint')
+        : null;
+    const lastSyncTimeStr =
+      typeof window !== 'undefined'
+        ? localStorage.getItem('edueye_last_synced_time')
+        : null;
+    const lastSyncTime = lastSyncTimeStr ? parseInt(lastSyncTimeStr, 10) : 0;
+    const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
+
+    // Skip if already in sync and schedule has not changed
+    if (lastSyncedFingerprint === scheduleFingerprint && lastSyncTime > twelveHoursAgo) {
+      setGcalStatus('success');
+      setGcalMessage('Google Calendar is in sync.');
+      return;
+    }
+
+    // Perform silent background sync
+    fetch('/api/gcal-sync/push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ events: result.events }),
+    })
+      .then(async (res) => {
+        if (res.ok) {
+          const data = await res.json();
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('edueye_last_synced_fingerprint', scheduleFingerprint);
+            localStorage.setItem('edueye_last_synced_time', Date.now().toString());
+          }
+          setGcalStatus('success');
+          setGcalMessage(`Calendar automatically synced (${data.synced} events verified).`);
+        } else if (res.status === 401) {
+          setGcalStatus('idle');
+          setGcalMessage('Connect Google Calendar to enable auto-sync.');
+        }
+      })
+      .catch(() => {});
+  }, [scheduleFingerprint, result.events]);
+
   const handleRebalance = useCallback(() => {
     const newResult = onRebalance();
     setResult(newResult);
@@ -140,9 +193,8 @@ export function WeeklyCalendarView({
 
   const handleGCalSync = useCallback(async () => {
     setGcalStatus('syncing');
-    setGcalMessage('Syncing active schedule to Google Calendar...');
+    setGcalMessage('Syncing schedule to Google Calendar...');
     try {
-      // First attempt direct push using existing session token
       const res = await fetch('/api/gcal-sync/push', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -151,13 +203,16 @@ export function WeeklyCalendarView({
 
       if (res.ok) {
         const data = await res.json();
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('edueye_last_synced_fingerprint', scheduleFingerprint);
+          localStorage.setItem('edueye_last_synced_time', Date.now().toString());
+        }
         setGcalStatus('success');
-        setGcalMessage(`${data.synced} events successfully synced to Google Calendar.`);
+        setGcalMessage(`${data.synced} events verified in Google Calendar.`);
         return;
       }
 
       if (res.status === 401) {
-        // Not authenticated yet — stash current events so callback can push them immediately after OAuth
         if (typeof window !== 'undefined') {
           sessionStorage.setItem('edueye_pending_gcal_events', JSON.stringify(result.events));
         }
@@ -170,7 +225,7 @@ export function WeeklyCalendarView({
       setGcalStatus('error');
       setGcalMessage('Google Calendar sync failed. Check your connection or authorize.');
     }
-  }, [result.events]);
+  }, [result.events, scheduleFingerprint]);
 
   const handleExportICS = useCallback(() => {
     downloadICS(result.events, `edueye-${result.weekStart}.ics`);
@@ -216,17 +271,37 @@ export function WeeklyCalendarView({
             Re-balance with AI
           </button>
 
-          {/* Google Calendar Sync */}
+          {/* Google Calendar Auto-Sync Badge / Button */}
           <button
             type="button"
             onClick={handleGCalSync}
             disabled={gcalStatus === 'syncing'}
-            className="px-4 py-2 rounded-xl text-xs font-bold text-[#3368A0] bg-white/90 hover:bg-[#C8DFDB]/40 border border-[#C8DFDB] transition flex items-center gap-2 cursor-pointer shadow-sm disabled:opacity-50"
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-sm ${
+              gcalStatus === 'success'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'text-[#3368A0] bg-white/90 hover:bg-[#C8DFDB]/40 border border-[#C8DFDB]'
+            } disabled:opacity-50`}
           >
-            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            {gcalStatus === 'syncing' ? 'Syncing...' : 'Sync to Google Calendar'}
+            {gcalStatus === 'syncing' ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-[#3368A0] border-t-transparent rounded-full animate-spin" />
+                <span>Auto-syncing...</span>
+              </>
+            ) : gcalStatus === 'success' ? (
+              <>
+                <svg className="w-3.5 h-3.5 text-emerald-600" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                <span>Google Calendar In Sync</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>Connect Google Calendar</span>
+              </>
+            )}
           </button>
 
           {/* ICS Export */}

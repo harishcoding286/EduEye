@@ -1,52 +1,19 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // EduEye — Push Schedule Events to Google Calendar
 // POST /api/gcal-sync/push
-// Ingests the current active timetable events (including dynamic Gemini revisions)
-// and pushes them directly to the student's primary Google Calendar.
+// Idempotently syncs active schedule events to Google Calendar with zero duplicates.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import type { ScheduledEvent } from '@/types/schedule';
+import {
+  upsertGCalEvent,
+  cleanupDuplicateGCalEvents,
+  getDeterministicGCalId,
+} from '@/lib/gcalService';
 
 export const runtime = 'nodejs';
-
-function toGCalDateTime(isoStr: string): string {
-  if (isoStr.includes('+') || isoStr.endsWith('Z')) return isoStr;
-  return `${isoStr}+05:30`;
-}
-
-async function pushEventToGCal(accessToken: string, event: ScheduledEvent): Promise<boolean> {
-  const startDateTime = toGCalDateTime(event.start);
-  const endDateTime = toGCalDateTime(event.end);
-
-  const isFocusSprint = event.category === 'REMEDIATION_LOCK';
-  const colorId = isFocusSprint ? '11' : event.isRescheduled ? '7' : '2';
-
-  const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      summary: event.title,
-      description: [
-        event.topic ? `Topic: ${event.topic}` : null,
-        event.diffReason ? `AI Schedule Note: ${event.diffReason}` : null,
-        event.alertScore != null ? `Cognitive Alertness: ${event.alertScore}%` : null,
-        'Managed by EduEye Adaptive Cognitive Scheduler',
-      ]
-        .filter(Boolean)
-        .join('\n'),
-      start: { dateTime: startDateTime, timeZone: 'Asia/Kolkata' },
-      end: { dateTime: endDateTime, timeZone: 'Asia/Kolkata' },
-      colorId,
-    }),
-  });
-
-  return res.ok;
-}
 
 export async function POST(req: Request) {
   const cookieStore = await cookies();
@@ -71,26 +38,49 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'No events provided to sync.' }, { status: 400 });
   }
 
-  // Push focus sprints and rescheduled events to Google Calendar (avoid duplicating fixed college lectures)
+  // Focus sprints and rescheduled events (exclude static college lectures to prevent calendar clutter)
   const eventsToSync = events.filter(
     (e) => e.category === 'REMEDIATION_LOCK' || e.isRescheduled
   );
-
   const targets = eventsToSync.length > 0 ? eventsToSync : events;
 
-  let successCount = 0;
+  // Strict deduplication: ensure only 1 task per time slot in the batch
+  const deduplicatedTargets: ScheduledEvent[] = [];
+  const seenSlots = new Set<string>();
+
   for (const ev of targets) {
-    try {
-      const ok = await pushEventToGCal(accessToken, ev);
-      if (ok) successCount++;
-    } catch (err) {
-      console.error(`Failed to push event "${ev.title}" to Google Calendar:`, err);
+    const slotKey = `${ev.start.slice(0, 10)}_${ev.start.slice(11, 16)}_${ev.end.slice(11, 16)}`;
+    if (!seenSlots.has(slotKey)) {
+      seenSlots.add(slotKey);
+      deduplicatedTargets.push(ev);
     }
+  }
+
+  const validIds = new Set<string>();
+  let successCount = 0;
+
+  for (const ev of deduplicatedTargets) {
+    try {
+      const ok = await upsertGCalEvent(accessToken, ev);
+      if (ok) {
+        successCount++;
+        validIds.add(getDeterministicGCalId(ev));
+      }
+    } catch (err) {
+      console.error(`[gcal-sync/push] Failed to upsert event "${ev.title}":`, err);
+    }
+  }
+
+  // Cleanup any legacy duplicate tasks from past runs in this time window
+  if (deduplicatedTargets.length > 0) {
+    const timeMin = deduplicatedTargets[0].start;
+    const timeMax = deduplicatedTargets[deduplicatedTargets.length - 1].end;
+    cleanupDuplicateGCalEvents(accessToken, timeMin, timeMax, validIds).catch(() => {});
   }
 
   return NextResponse.json({
     success: true,
     synced: successCount,
-    total: targets.length,
+    total: deduplicatedTargets.length,
   });
 }

@@ -23,14 +23,17 @@ import { getRootCauseChain, weaknessesToNodeIds } from './knowledgeGraph';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const FOCUS_SPRINT_DURATION_MINS = 90; // 1.5h per session
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const CRITICAL_FOCUS_DURATION_MINS = 120; // 2 hours for critical deficit subject
+const REVISION_DURATION_MINS = 40;        // At least 30-45 mins for other subjects
 
 const EVENT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  CLASS:          { bg: '#3368A0', text: '#ffffff', border: '#2b5887' },
-  PERSONAL:       { bg: '#C8DFDB', text: '#3368A0', border: '#aed0cb' },
-  REMEDIATION_LOCK: { bg: '#f87171', text: '#ffffff', border: '#ef4444' },
-  CRITICAL_FOCUS: { bg: '#ef4444', text: '#ffffff', border: '#dc2626' },
-  RESCHEDULED:    { bg: '#66A3BF', text: '#ffffff', border: '#4e8fa8' },
+  CLASS:            { bg: '#3368A0', text: '#ffffff', border: '#2b5887' },
+  PERSONAL:         { bg: '#C8DFDB', text: '#3368A0', border: '#aed0cb' },
+  REMEDIATION_LOCK: { bg: '#66A3BF', text: '#ffffff', border: '#4e8fa8' },
+  CRITICAL_FOCUS:   { bg: '#ef4444', text: '#ffffff', border: '#dc2626' },
+  RESCHEDULED:      { bg: '#66A3BF', text: '#ffffff', border: '#4e8fa8' },
 };
 
 // ── Alertness Curve ───────────────────────────────────────────────────────────
@@ -150,31 +153,44 @@ interface CandidateSlot {
   alertScore: number;
 }
 
+/**
+ * Searches for free slots while STRICTLY preserving:
+ * - 8 hours of sleep: No scheduling between 22:30 and 07:30
+ * - College commitments & existing booked events
+ */
 function findCandidateSlots(
   days: string[],
   busyByDay: Map<string, MinimalInterval[]>,
   chronotype: Chronotype,
   durationMins: number,
-  searchWindowStart = 8 * 60,  // 08:00
-  searchWindowEnd   = 21 * 60, // 21:00
+  searchWindowStart = 7 * 60 + 30, // 07:30 (strictly after 8h sleep)
+  searchWindowEnd   = 22 * 60,      // 22:00 (leaves 1h wind-down before 23:00 sleep)
+  preferredPeriod?: 'MORNING' | 'AFTERNOON' | 'EVENING',
 ): CandidateSlot[] {
   const candidates: CandidateSlot[] = [];
 
   for (const day of days) {
     const busy = busyByDay.get(day) ?? [];
 
-    for (let start = searchWindowStart; start + durationMins <= searchWindowEnd; start += 30) {
+    for (let start = searchWindowStart; start + durationMins <= searchWindowEnd; start += 15) {
       const slot: MinimalInterval = { startMins: start, endMins: start + durationMins };
       if (busy.some((b) => hasOverlap(slot, b))) continue;
 
       const midpoint = start + durationMins / 2;
-      const alertScore = getAlertnessScore(midpoint, chronotype);
+      let alertScore = getAlertnessScore(midpoint, chronotype);
+
+      // Apply subtle boost for requested period of the day
+      if (preferredPeriod === 'MORNING' && start < 12 * 60) {
+        alertScore += 10;
+      } else if (preferredPeriod === 'EVENING' && start >= 17 * 60 && start <= 21 * 60) {
+        alertScore += 10;
+      }
 
       candidates.push({ day, startMins: start, endMins: start + durationMins, alertScore });
     }
   }
 
-  // Sort: highest alertness first, earliest day first
+  // Sort: highest alertness first, then earliest day
   return candidates.sort((a, b) => {
     if (Math.abs(b.alertScore - a.alertScore) > 5) return b.alertScore - a.alertScore;
     return a.day.localeCompare(b.day) || a.startMins - b.startMins;
@@ -183,19 +199,12 @@ function findCandidateSlots(
 
 // ── Conflict Re-negotiation ───────────────────────────────────────────────────
 
-/**
- * Tries to find an alternative time for a flexible PERSONAL event that is
- * blocking a high-priority focus slot, on the same day.
- *
- * Returns the rescheduled minutes [newStart, newEnd] or null if impossible.
- */
 function findRescheduleSlot(
   busyIntervals: MinimalInterval[],
   eventDurationMins: number,
   excludeStartMins: number,
   daySearchEnd = 22 * 60,
 ): { newStart: number; newEnd: number } | null {
-  // Try scheduling the bumped event in later slots (starting 30m after the conflict)
   const tryStart = excludeStartMins + eventDurationMins + 30;
 
   for (let s = tryStart; s + eventDurationMins <= daySearchEnd; s += 30) {
@@ -219,11 +228,12 @@ export function generateAdaptiveSchedule(
   const weekStart = days[0];
   const weekEnd = days[days.length - 1];
 
-  // Identify ordered deficit subjects (worst first)
+  // Identify ordered deficit subjects (worst deficit is critical)
   const deficitSubjects = [...rankedSubjects].sort((a, b) => a.deficitScore - b.deficitScore);
   const criticalSubject = deficitSubjects[0];
+  const otherSubjects = rankedSubjects.filter((s) => s.id !== criticalSubject.id);
 
-  // Traverse knowledge graph to find root-cause chain for critical subject
+  // Traverse knowledge graph for root-cause chain of critical subject
   const failedNodeIds = weaknessesToNodeIds(criticalSubject.conceptWeaknesses);
   const rootCauseChain = getRootCauseChain(failedNodeIds);
 
@@ -246,120 +256,126 @@ export function generateAdaptiveSchedule(
   const diffs: ScheduleDiff[] = [];
   let focusSlotsInjected = 0;
 
-  // ── Determine how many focus sessions per subject ──────────────────────────
-  // Critical subject: inject up to 4 sessions, secondary: up to 2
-  const sessionsNeeded: Array<{ subject: SubjectAnalytics; count: number; conceptChain: string[] }> = [];
+  // ── 1. Allocate Critical Subject (2-hour Deep Focus Sprints) ───────────────────
+  // Critical subject gets prioritized 4 deep focus sessions (90-120 mins) during peak alertness
+  const criticalCandidates = findCandidateSlots(
+    days,
+    busyByDay,
+    scheduleRecord.chronotype,
+    CRITICAL_FOCUS_DURATION_MINS,
+    7 * 60 + 30,
+    22 * 60,
+    'EVENING',
+  );
 
-  for (let i = 0; i < Math.min(deficitSubjects.length, 3); i++) {
-    const sub = deficitSubjects[i];
-    const chain = i === 0 ? rootCauseChain.map((n) => n.label) : sub.conceptWeaknesses;
-    const count = i === 0 ? 4 : i === 1 ? 2 : 1;
-    sessionsNeeded.push({ subject: sub, count, conceptChain: chain });
+  let criticalInjected = 0;
+  for (const slot of criticalCandidates) {
+    if (criticalInjected >= 4) break;
+
+    const slotInterval: MinimalInterval = { startMins: slot.startMins, endMins: slot.endMins };
+    const dayBusy = busyByDay.get(slot.day) ?? [];
+
+    // Avoid double scheduling critical on the same day if already present
+    const alreadyOnDay = finalEvents.some(
+      (e) => e.start.slice(0, 10) === slot.day && e.title.includes(criticalSubject.name),
+    );
+    if (alreadyOnDay && criticalInjected < 3) continue;
+
+    if (dayBusy.some((b) => hasOverlap(slotInterval, b))) continue;
+
+    const focusConcept =
+      rootCauseChain[criticalInjected % Math.max(rootCauseChain.length, 1)]?.label ??
+      criticalSubject.conceptWeaknesses[0] ??
+      criticalSubject.name;
+
+    const sprintEvent: ScheduledEvent = {
+      id: `sprint_critical_${criticalSubject.id}_${slot.day}_${slot.startMins}`,
+      title: `${criticalSubject.name} — Deep Focus Sprint (2h)`,
+      start: isoFromDateMins(slot.day, slot.startMins),
+      end: isoFromDateMins(slot.day, slot.endMins),
+      category: 'REMEDIATION_LOCK',
+      color: EVENT_COLORS.CRITICAL_FOCUS.bg,
+      textColor: EVENT_COLORS.CRITICAL_FOCUS.text,
+      borderColor: EVENT_COLORS.CRITICAL_FOCUS.border,
+      topic: focusConcept,
+      alertScore: slot.alertScore,
+    };
+
+    finalEvents.push(sprintEvent);
+    dayBusy.push(slotInterval);
+    busyByDay.set(slot.day, dayBusy);
+
+    criticalInjected++;
+    focusSlotsInjected++;
   }
 
-  // ── Inject focus sprints ───────────────────────────────────────────────────
-  for (const { subject, count, conceptChain } of sessionsNeeded) {
-    const candidates = findCandidateSlots(
+  // ── 2. Allocate Other Subjects (At least 30-45 mins Revisions on Different Periods) ──
+  // Every non-critical subject gets scheduled for 30-45m revision blocks across different days/times
+  for (const otherSub of otherSubjects) {
+    const subCandidates = findCandidateSlots(
       days,
       busyByDay,
       scheduleRecord.chronotype,
-      FOCUS_SPRINT_DURATION_MINS,
+      REVISION_DURATION_MINS,
+      7 * 60 + 30, // 07:30 morning
+      22 * 60,      // 22:00 evening
+      otherSub.deficitScore < 0 ? 'MORNING' : 'EVENING',
     );
 
-    let injected = 0;
-    for (const slot of candidates) {
-      if (injected >= count) break;
+    let subInjected = 0;
+    const targetSessions = 2; // At least 2 revision sessions per subject per week
+
+    for (const slot of subCandidates) {
+      if (subInjected >= targetSessions) break;
 
       const slotInterval: MinimalInterval = { startMins: slot.startMins, endMins: slot.endMins };
       const dayBusy = busyByDay.get(slot.day) ?? [];
 
-      // Check for PERSONAL (flexible) event conflict only
-      const conflictingPersonal = finalEvents.find((ev) => {
-        if (ev.category !== 'PERSONAL') return false;
-        if (ev.start.slice(0, 10) !== slot.day) return false;
-        const evStart = hhmmToMins(ev.start.slice(11, 16));
-        const evEnd   = hhmmToMins(ev.end.slice(11, 16));
-        return hasOverlap(slotInterval, { startMins: evStart, endMins: evEnd });
-      });
+      if (dayBusy.some((b) => hasOverlap(slotInterval, b))) continue;
 
-      if (conflictingPersonal) {
-        // Try non-destructive reschedule
-        const evDur = hhmmToMins(conflictingPersonal.end.slice(11, 16))
-                    - hhmmToMins(conflictingPersonal.start.slice(11, 16));
-        const reschedule = findRescheduleSlot(dayBusy, evDur, slot.endMins);
+      const isMorning = slot.startMins < 12 * 60;
+      const topicTag =
+        otherSub.conceptWeaknesses[subInjected % Math.max(otherSub.conceptWeaknesses.length, 1)] ??
+        otherSub.keyTopics[0] ??
+        otherSub.name;
 
-        if (reschedule) {
-          const originalStart = conflictingPersonal.start;
-          const originalEnd   = conflictingPersonal.end;
-          const newStart = isoFromDateMins(slot.day, reschedule.newStart);
-          const newEnd   = isoFromDateMins(slot.day, reschedule.newEnd);
-
-          // Mutate in-place
-          conflictingPersonal.start = newStart;
-          conflictingPersonal.end   = newEnd;
-          conflictingPersonal.isRescheduled = true;
-          conflictingPersonal.originalStart = originalStart;
-          conflictingPersonal.originalEnd   = originalEnd;
-          conflictingPersonal.color = EVENT_COLORS.RESCHEDULED.bg;
-          conflictingPersonal.borderColor = EVENT_COLORS.RESCHEDULED.border;
-          conflictingPersonal.diffReason = `Rescheduled to lock in ${subject.name} Focus Sprint`;
-
-          diffs.push({
-            eventId: conflictingPersonal.id,
-            eventTitle: conflictingPersonal.title,
-            fromStart: originalStart,
-            fromEnd: originalEnd,
-            toStart: newStart,
-            toEnd: newEnd,
-            reason: `${conflictingPersonal.title} shifted to lock in critical ${subject.name} Focus Sprint at ${minsToHHMM(slot.startMins)}.`,
-          });
-
-          // Update busy map for rescheduled event
-          busyByDay.set(
-            slot.day,
-            dayBusy.filter(
-              (b) => !(b.startMins === hhmmToMins(originalStart.slice(11, 16))),
-            ).concat({ startMins: reschedule.newStart, endMins: reschedule.newEnd }),
-          );
-        } else {
-          // Can't reschedule — skip this slot
-          continue;
-        }
-      }
-
-      // Determine concept to focus on (rotate through chain)
-      const focusConcept = conceptChain[injected % Math.max(conceptChain.length, 1)]
-        ?? subject.name;
-
-      const isCritical = subject.id === criticalSubject.id;
-      const colors = isCritical ? EVENT_COLORS.CRITICAL_FOCUS : EVENT_COLORS.REMEDIATION_LOCK;
-
-      const sprintEvent: ScheduledEvent = {
-        id: `sprint_${subject.id}_${slot.day}_${slot.startMins}`,
-        title: `${subject.name} — Focus Sprint`,
+      const revisionEvent: ScheduledEvent = {
+        id: `rev_${otherSub.id}_${slot.day}_${slot.startMins}`,
+        title: `${otherSub.name} — ${isMorning ? 'Morning Quick Revision (40m)' : 'Review & Practice (40m)'}`,
         start: isoFromDateMins(slot.day, slot.startMins),
         end: isoFromDateMins(slot.day, slot.endMins),
         category: 'REMEDIATION_LOCK',
-        color: colors.bg,
-        textColor: colors.text,
-        borderColor: colors.border,
-        topic: focusConcept,
+        color: EVENT_COLORS.REMEDIATION_LOCK.bg,
+        textColor: EVENT_COLORS.REMEDIATION_LOCK.text,
+        borderColor: EVENT_COLORS.REMEDIATION_LOCK.border,
+        topic: topicTag,
         alertScore: slot.alertScore,
       };
 
-      finalEvents.push(sprintEvent);
-
-      // Mark slot as busy
-      dayBusy.push({ startMins: slot.startMins, endMins: slot.endMins });
+      finalEvents.push(revisionEvent);
+      dayBusy.push(slotInterval);
       busyByDay.set(slot.day, dayBusy);
 
-      injected++;
+      subInjected++;
       focusSlotsInjected++;
     }
   }
 
+  // ── 3. Strict Deduplication & Non-Overlap Pass ─────────────────────────────────
+  // Ensure that no two events ever overlap or duplicate the same hour
+  const deduplicatedEvents: ScheduledEvent[] = [];
+  const seenIntervals = new Set<string>();
+
+  for (const ev of finalEvents) {
+    const timeKey = `${ev.start.slice(0, 10)}_${hhmmToMins(ev.start.slice(11, 16))}`;
+    if (!seenIntervals.has(timeKey)) {
+      seenIntervals.add(timeKey);
+      deduplicatedEvents.push(ev);
+    }
+  }
+
   return {
-    events: finalEvents,
+    events: deduplicatedEvents,
     diffs,
     criticalSubject: criticalSubject.name,
     focusSlotsInjected,

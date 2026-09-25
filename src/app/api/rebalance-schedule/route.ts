@@ -90,15 +90,15 @@ const REBALANCE_SCHEMA = {
     },
     focusSprints: {
       type: Type.ARRAY,
-      description: 'High-priority remediation study sessions (60-90 min each) placed during optimal cognitive hours respecting student feedback',
+      description: 'Balanced study sessions across the 7-day week: 90-120 min Deep Focus Sprints for the critical subject, and 30-45 min Quick Revisions for other subjects, strictly non-overlapping and outside sleep/college hours',
       items: {
         type: Type.OBJECT,
         properties: {
-          id: { type: Type.STRING, description: 'Unique identifier, e.g. sprint_la_1' },
-          title: { type: Type.STRING, description: 'e.g. Linear Algebra — Focus Sprint' },
+          id: { type: Type.STRING, description: 'Unique identifier, e.g. sprint_la_1 or rev_os_1' },
+          title: { type: Type.STRING, description: 'e.g. Linear Algebra — Deep Focus Sprint (2h) or Operating Systems — Review & Practice (40m)' },
           start: { type: Type.STRING, description: 'ISO datetime YYYY-MM-DDTHH:MM:SS' },
           end: { type: Type.STRING, description: 'ISO datetime YYYY-MM-DDTHH:MM:SS' },
-          topic: { type: Type.STRING, description: 'Specific concept targeted, e.g. Eigenvalues or Null Space' },
+          topic: { type: Type.STRING, description: 'Specific concept targeted' },
         },
         propertyOrdering: ['id', 'title', 'start', 'end', 'topic'],
         required: ['id', 'title', 'start', 'end', 'topic'],
@@ -147,6 +147,7 @@ export async function POST(req: Request) {
   }
 
   const criticalSubject = analytics.criticalSubject;
+  const otherSubjects = analytics.subjects.filter((s) => s.id !== criticalSubject.id);
   const chronotype = scheduleRecord.chronotype;
 
   // Build current schedule reference
@@ -155,14 +156,36 @@ export async function POST(req: Request) {
   const weekEnd = body.currentSchedule?.weekEnd || '';
 
   // Extract flexible personal events that could be rescheduled if needed
-  const flexibleEvents = currentEvents.filter((e) => e.category === 'PERSONAL' && !e.title.toLowerCase().includes('lunch') && !e.title.toLowerCase().includes('rest'));
+  const flexibleEvents = currentEvents.filter(
+    (e) =>
+      e.category === 'PERSONAL' &&
+      !e.title.toLowerCase().includes('lunch') &&
+      !e.title.toLowerCase().includes('rest') &&
+      !e.title.toLowerCase().includes('sleep')
+  );
 
   const prompt = `You are the EduEye Principal Cognitive Scheduling AI.
-Your objective is to re-balance an engineering student's 7-day academic and personal schedule by incorporating the student's personal feedback while guaranteeing that their critical academic deficits are remediated during optimal mental alertness hours.
+Your objective is to generate an optimal, scientifically balanced 7-day academic and personal schedule by incorporating the student's feedback while adhering to strict human cognitive and physiological constraints.
+
+--- CRITICAL SCHEDULING RULES (MANDATORY) ---
+1. STRICT SLEEP PROTECTION (8 HOURS MUST):
+   - The student requires 8 hours of unbroken sleep every single night (22:30 to 07:30).
+   - NEVER schedule any study session, revision, or rescheduled event between 22:30 and 07:30.
+2. COLLEGE COMMITMENT PROTECTION:
+   - College Lectures: 09:30 - 13:00 (Mon to Fri) - CATEGORY CLASS. NEVER touch or overlap college hours.
+   - CS Lab Sessions: 14:00 - 16:00 (Tue, Thu) - CATEGORY CLASS. NEVER touch or overlap.
+   - Lunch: 13:00 - 14:00 (Daily) - keep free for meals.
+3. SUBJECT BALANCE DIRECTIVE:
+   - CRITICAL DEFICIT SUBJECT (${criticalSubject.name}): Must receive high priority with 3 to 4 Deep Focus Sprint blocks (90-120 minutes each, e.g. 1.5 to 2 hours) during peak alertness hours (e.g. 17:30-19:30 or weekend mornings).
+   - ALL OTHER SUBJECTS (${otherSubjects.map((s) => s.name).join(', ')}): MUST ALSO BE ALLOCATED ON THE SCHEDULE!
+     Allocate at least 30 to 45 minutes of revision / active retrieval for each of these subjects across different days and different periods of the day (e.g., morning 08:00-08:45 before college, or late evening 20:15-21:00).
+4. ABSOLUTE ZERO DUPLICATES / ZERO OVERLAPS:
+   - If a task is allocated in a particular time slot, NO OTHER task may be placed in that same time slot.
+   - No two events may share or overlap the same hour. Every event start and end time must be mutually exclusive.
 
 --- STUDENT TELEMETRY ---
 Name: ${typedDb.student.name} (${typedDb.student.branch}, Semester ${typedDb.student.semester})
-Chronotype: ${chronotype} (Optimal mental alertness: 09:30-11:30 and 14:00-16:00. Postprandial dip at 13:00-14:00. Fatigue starts after 17:30).
+Chronotype: ${chronotype} (Optimal mental alertness: 09:30-11:30 and 15:00-16:00. Post-lunch dip at 13:00-14:30. Fatigue starts after 18:00).
 Attendance: ${typedDb.student.daysAttended}/${typedDb.student.totalWorkingDays} days (${Math.round((typedDb.student.daysAttended / typedDb.student.totalWorkingDays) * 100)}%)
 
 Academic Performance by Subject:
@@ -177,35 +200,23 @@ ${analytics.subjects
 
 CRITICAL DEFICIT SUBJECT: ${criticalSubject.name} (${criticalSubject.code})
 - Weak concepts: ${criticalSubject.conceptWeaknesses.join(', ')}
-- Trajectory: CAT2 dropped to ${criticalSubject.cat2Score}/${criticalSubject.maxCATScore}. Must receive 3-4 priority remediation focus sprints!
+- Trajectory: CAT2 dropped to ${criticalSubject.cat2Score}/${criticalSubject.maxCATScore}. Must receive priority 90-120 min Deep Focus Sprints!
 
 Upcoming High-Stakes Exams:
 ${scheduleRecord.upcomingExams
   .map((e) => `- ${e.subjectName} ${e.examType} on ${e.examDate} (Priority: ${e.priority})`)
   .join('\n')}
 
-MANDATORY FIXED COMMITMENTS (DO NOT SCHEDULE STUDY DURING THESE TIMES):
-- College Lectures: 09:30 - 13:00 (Mon to Fri) - Category: CLASS
-- Lunch: 13:00 - 14:00 (Daily) - Category: PERSONAL
-- Rest / Sleep: 22:00 - 23:59 (Daily) - Category: PERSONAL
-
 FLEXIBLE PERSONAL EVENTS IN CURRENT SCHEDULE:
 ${flexibleEvents.map((e) => `• id: "${e.id}", title: "${e.title}", current time: ${e.start} -> ${e.end}`).join('\n')}
 
-Current Planning Horizon:
-Week: ${weekStart} to ${weekEnd}
+Planning Horizon:
+7-Day Window from ${weekStart} to ${weekEnd}.
 
 --- STUDENT'S COMPLAINT / ADVICE / CONSTRAINTS ---
-"${studentFeedback || 'Please optimize my focus blocks for maximum retention before my upcoming exams and minimize fatigue.'}"
+"${studentFeedback || 'Please optimize my schedule so critical subjects get 2 hours of focus and all other subjects get 30-45 mins of revision without touching sleep or college.'}"
 
---- SCHEDULING DIRECTIVES ---
-1. Address the student's specific feedback directly (e.g. sports practice, shifting study to mornings, avoiding late evenings, etc.).
-2. Plan 4 to 6 focused study sprint blocks in "focusSprints" (60-90 min each) targeting the critical deficit subject ("${criticalSubject.name}") and other weak areas, placed in optimal cognitive alertness hours that do not clash with College (09:30-13:00) or Lunch (13:00-14:00).
-3. If any flexible personal event clashes with the student's requested preferences or ideal study slots, place its new time in "rescheduledEvents" and record it in "diffs".
-4. All datetime strings MUST be formatted as ISO-8601 strings (YYYY-MM-DDTHH:MM:SS) within the 7-day week starting ${weekStart}.
-5. Provide a clear, encouraging "aiRationale" explaining how the timetable was restructured.
-
-Return valid JSON adhering to the schema.`;
+Return valid JSON adhering to the schema. All datetimes must be in YYYY-MM-DDTHH:MM:SS format within the week window.`;
 
   try {
     const ai = new GoogleGenAI({ apiKey });
@@ -288,21 +299,64 @@ Return valid JSON adhering to the schema.`;
         return ev;
       });
 
-    // 3. Inject new focus sprints planned by Gemini
-    const newFocusEvents: ScheduledEvent[] = (parsed.focusSprints || []).map((sprint, idx) => {
+    // Build busy intervals map for each day to prevent ANY overlaps
+    const busyIntervalsByDay = new Map<string, Array<{ startMins: number; endMins: number }>>();
+
+    for (const base of updatedBaseEvents) {
+      const day = base.start.slice(0, 10);
+      const startH = parseInt(base.start.slice(11, 13), 10) || 0;
+      const startM = parseInt(base.start.slice(14, 16), 10) || 0;
+      const endH = parseInt(base.end.slice(11, 13), 10) || 0;
+      const endM = parseInt(base.end.slice(14, 16), 10) || 0;
+      if (!busyIntervalsByDay.has(day)) busyIntervalsByDay.set(day, []);
+      busyIntervalsByDay.get(day)!.push({
+        startMins: startH * 60 + startM,
+        endMins: endH * 60 + endM,
+      });
+    }
+
+    // 3. Inject new focus sprints planned by Gemini with strict anti-collision validation
+    const newFocusEvents: ScheduledEvent[] = [];
+
+    for (const [idx, sprint] of (parsed.focusSprints || []).entries()) {
+      const day = sprint.start.slice(0, 10);
+      const startH = parseInt(sprint.start.slice(11, 13), 10);
+      const startM = parseInt(sprint.start.slice(14, 16), 10);
+      const endH = parseInt(sprint.end.slice(11, 13), 10);
+      const endM = parseInt(sprint.end.slice(14, 16), 10);
+
+      const sprintStartMins = isNaN(startH) ? 1050 : startH * 60 + startM;
+      const sprintEndMins = isNaN(endH) ? sprintStartMins + 90 : endH * 60 + endM;
+
+      // 8-hour sleep window protection: strictly exclude 22:30 to 07:30
+      if (sprintStartMins < 7 * 60 + 30 || sprintEndMins > 22 * 60 + 30) {
+        continue;
+      }
+
+      // Check collision with already scheduled events on that day
+      const dayBusy = busyIntervalsByDay.get(day) || [];
+      const hasCollision = dayBusy.some(
+        (b) => Math.max(sprintStartMins, b.startMins) < Math.min(sprintEndMins, b.endMins)
+      );
+
+      if (hasCollision) {
+        continue; // Discard overlapping / duplicate tasks for that hour
+      }
+
+      // Register interval as busy
+      dayBusy.push({ startMins: sprintStartMins, endMins: sprintEndMins });
+      busyIntervalsByDay.set(day, dayBusy);
+
       const isCritical =
         sprint.title.toLowerCase().includes(criticalSubject.name.toLowerCase()) ||
         sprint.topic?.toLowerCase().includes(criticalSubject.name.toLowerCase());
 
       const colors = isCritical ? EVENT_COLORS.CRITICAL_FOCUS : EVENT_COLORS.REMEDIATION_LOCK;
+      const midpoint = sprintStartMins + (sprintEndMins - sprintStartMins) / 2;
+      const alertScore = getAlertnessScore(midpoint, chronotype);
 
-      const startHour = new Date(sprint.start).getHours();
-      const startMin = new Date(sprint.start).getMinutes();
-      const minsFromMidnight = isNaN(startHour) ? 600 : startHour * 60 + startMin;
-      const alertScore = getAlertnessScore(minsFromMidnight, chronotype);
-
-      return {
-        id: sprint.id || `sprint_gemini_${idx}`,
+      newFocusEvents.push({
+        id: sprint.id || `sprint_gemini_${day}_${sprintStartMins}`,
         title: sprint.title,
         start: sprint.start,
         end: sprint.end,
@@ -312,8 +366,8 @@ Return valid JSON adhering to the schema.`;
         borderColor: colors.border,
         topic: sprint.topic || criticalSubject.name,
         alertScore,
-      };
-    });
+      });
+    }
 
     const finalEvents = [...updatedBaseEvents, ...newFocusEvents];
     const focusCount = finalEvents.filter((e) => e.category === 'REMEDIATION_LOCK').length;

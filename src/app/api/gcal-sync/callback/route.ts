@@ -39,22 +39,7 @@ async function exchangeCodeForToken(code: string): Promise<TokenResponse> {
   return res.json() as Promise<TokenResponse>;
 }
 
-async function pushEventToGCal(accessToken: string, event: ScheduledEvent): Promise<void> {
-  await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      summary: event.title,
-      description: event.topic ? `EduEye: ${event.topic}` : 'EduEye Scheduled Event',
-      start: { dateTime: event.start, timeZone: 'Asia/Kolkata' },
-      end: { dateTime: event.end, timeZone: 'Asia/Kolkata' },
-      colorId: event.category === 'REMEDIATION_LOCK' ? '11' : event.category === 'CLASS' ? '9' : '2',
-    }),
-  });
-}
+import { upsertGCalEvent, cleanupDuplicateGCalEvents, getDeterministicGCalId } from '@/lib/gcalService';
 
 export async function GET(req: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -92,9 +77,23 @@ export async function GET(req: NextRequest) {
       new Date(),
     );
 
-    // Push focus sprint events initially
+    // Push focus and revision events idempotently with deterministic IDs
     const focusEvents = result.events.filter((e) => e.category === 'REMEDIATION_LOCK');
-    await Promise.all(focusEvents.map((ev) => pushEventToGCal(tokens.access_token, ev)));
+    const validIds = new Set<string>();
+
+    for (const ev of focusEvents) {
+      await upsertGCalEvent(tokens.access_token, ev);
+      validIds.add(getDeterministicGCalId(ev));
+    }
+
+    if (focusEvents.length > 0) {
+      cleanupDuplicateGCalEvents(
+        tokens.access_token,
+        focusEvents[0].start,
+        focusEvents[focusEvents.length - 1].end,
+        validIds
+      ).catch(() => {});
+    }
 
     const response = NextResponse.redirect(
       `${APP_URL}/schedule?gcal=success&synced=${focusEvents.length}`,
