@@ -7,22 +7,16 @@ import { useAppContext } from '@/context/AppContext';
 
 export interface AppNavbarProps {
   userName?: string;
-  role?: 'STUDENT' | 'TEACHER';
 }
 
-export function AppNavbar({ userName, role }: AppNavbarProps) {
+export function AppNavbar({ userName }: AppNavbarProps) {
   const {
-    currentRole,
-    setCurrentRole,
     handleGradeDrop,
     handleRemediationResolved,
   } = useAppContext();
 
   const pathname = usePathname();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [lastActionMessage, setLastActionMessage] = useState<string | null>(null);
-
-  const activeRole = role ?? currentRole;
 
   const triggerPopQuiz = async () => {
     await handleGradeDrop('std_101', 'Eigenvectors', 38);
@@ -88,92 +82,19 @@ export function AppNavbar({ userName, role }: AppNavbarProps) {
                 );
               })}
             </nav>
-            <div className="relative z-50">
-              <button
-                type="button"
-                onClick={() => setIsDropdownOpen((prev) => !prev)}
-                className="flex items-center space-x-2.5 px-3.5 py-2 rounded-2xl bg-[#C8DFDB]/20 hover:bg-[#C8DFDB]/40 border border-[#C8DFDB] transition-all text-left cursor-pointer"
-                aria-expanded={isDropdownOpen}
-              >
-                <div className="w-7 h-7 rounded-xl flex items-center justify-center text-xs font-black bg-[#3368A0] text-white">
-                  {activeRole === 'STUDENT' ? 'AR' : 'SV'}
+            {/* Student Profile Badge */}
+            <div className="flex items-center space-x-2.5 px-3 py-1.5 rounded-2xl bg-[#C8DFDB]/20 border border-[#C8DFDB]/80">
+              <div className="w-7 h-7 rounded-xl flex items-center justify-center text-xs font-black bg-[#3368A0] text-white shadow-xs">
+                R
+              </div>
+              <div className="text-left hidden sm:block">
+                <div className="text-xs font-black text-slate-800 leading-tight">
+                  Ram
                 </div>
-                <div className="text-left hidden sm:block">
-                  <div className="text-xs font-black text-slate-800">
-                    {userName || (activeRole === 'STUDENT' ? 'Alex Rivera' : 'Dr. Sarah Vance')}
-                  </div>
-                  <div className="text-[10px] font-bold text-[#66A3BF]">
-                    {activeRole === 'STUDENT' ? 'Student View' : 'Teacher View'}
-                  </div>
+                <div className="text-[10px] font-bold text-[#66A3BF] leading-tight">
+                  Student
                 </div>
-                <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {/* Persona Switcher Dropdown */}
-              {isDropdownOpen && (
-                <>
-                  {/* Invisible backdrop to dismiss on outside click */}
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setIsDropdownOpen(false)}
-                  />
-                  <div
-                    className="absolute right-0 mt-2 w-56 rounded-2xl bg-white/95 backdrop-blur-2xl border border-[#C8DFDB] shadow-[0_20px_45px_rgba(51,104,160,0.22)] py-1.5 z-50 p-1 animate-in fade-in slide-in-from-top-1 duration-150"
-                  >
-                    <div className="px-3 py-1.5 border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-[#66A3BF]">
-                      Select Persona
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCurrentRole('STUDENT');
-                        setIsDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-xl flex items-center justify-between hover:bg-[#C8DFDB]/20 transition ${
-                        activeRole === 'STUDENT' ? 'bg-[#C8DFDB]/30 font-bold' : ''
-                      }`}
-                    >
-                      <div>
-                        <div className="text-xs font-bold text-slate-900">
-                          Alex Rivera
-                        </div>
-                        <div className="text-[11px] text-slate-500">Student</div>
-                      </div>
-                      {activeRole === 'STUDENT' && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#3368A0] text-white font-bold">
-                          ACTIVE
-                        </span>
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCurrentRole('TEACHER');
-                        setIsDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-xl flex items-center justify-between hover:bg-[#C8DFDB]/20 transition ${
-                        activeRole === 'TEACHER' ? 'bg-[#C8DFDB]/30 font-bold' : ''
-                      }`}
-                    >
-                      <div>
-                        <div className="text-xs font-bold text-slate-900">
-                          Dr. Sarah Vance
-                        </div>
-                        <div className="text-[11px] text-slate-500">Course Director</div>
-                      </div>
-                      {activeRole === 'TEACHER' && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#3368A0] text-white font-bold">
-                          ACTIVE
-                        </span>
-                      )}
-                    </button>
-                  </div>
-                </>
-              )}
+              </div>
             </div>
           </div>
         </div>
