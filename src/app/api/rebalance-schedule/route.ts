@@ -29,6 +29,8 @@ const EVENT_COLORS: Record<string, { bg: string; text: string; border: string }>
   RESCHEDULED:      { bg: '#66A3BF', text: '#ffffff', border: '#4e8fa8' },
 };
 
+// Compact, targeted schema: Gemini only outputs the changed events and focus sessions
+// rather than regenerating 50 static lectures, preventing token cutoff.
 const REBALANCE_SCHEMA = {
   type: Type.OBJECT,
   properties: {
@@ -39,7 +41,7 @@ const REBALANCE_SCHEMA = {
     },
     diffs: {
       type: Type.ARRAY,
-      description: 'List of events that were moved, rescheduled, or adjusted',
+      description: 'List of events that were moved, shifted, or rescheduled relative to the original timetable',
       items: {
         type: Type.OBJECT,
         properties: {
@@ -71,46 +73,40 @@ const REBALANCE_SCHEMA = {
         ],
       },
     },
-    revisedEvents: {
+    rescheduledEvents: {
       type: Type.ARRAY,
-      description: 'Full list of revised scheduled events for the 7-day period',
+      description: 'List of existing non-academic events (e.g. gym, study group) that were shifted to new times to accommodate the student request or study sessions',
       items: {
         type: Type.OBJECT,
         properties: {
-          id: { type: Type.STRING, description: 'Event identifier' },
-          title: { type: Type.STRING, description: 'Display title' },
+          id: { type: Type.STRING, description: 'Exact ID of the event from the provided current schedule' },
+          start: { type: Type.STRING, description: 'New ISO datetime YYYY-MM-DDTHH:MM:SS' },
+          end: { type: Type.STRING, description: 'New ISO datetime YYYY-MM-DDTHH:MM:SS' },
+          diffReason: { type: Type.STRING, description: 'Short note explaining the shift' },
+        },
+        propertyOrdering: ['id', 'start', 'end', 'diffReason'],
+        required: ['id', 'start', 'end'],
+      },
+    },
+    focusSprints: {
+      type: Type.ARRAY,
+      description: 'High-priority remediation study sessions (60-90 min each) placed during optimal cognitive hours respecting student feedback',
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          id: { type: Type.STRING, description: 'Unique identifier, e.g. sprint_la_1' },
+          title: { type: Type.STRING, description: 'e.g. Linear Algebra — Focus Sprint' },
           start: { type: Type.STRING, description: 'ISO datetime YYYY-MM-DDTHH:MM:SS' },
           end: { type: Type.STRING, description: 'ISO datetime YYYY-MM-DDTHH:MM:SS' },
-          category: {
-            type: Type.STRING,
-            description: 'CLASS, PERSONAL, or REMEDIATION_LOCK',
-          },
-          topic: { type: Type.STRING, description: 'Course or concept topic' },
-          isRescheduled: {
-            type: Type.BOOLEAN,
-            description: 'Whether this event was rescheduled or shifted',
-          },
-          diffReason: {
-            type: Type.STRING,
-            description: 'Short reason for change if rescheduled',
-          },
+          topic: { type: Type.STRING, description: 'Specific concept targeted, e.g. Eigenvalues or Null Space' },
         },
-        propertyOrdering: [
-          'id',
-          'title',
-          'start',
-          'end',
-          'category',
-          'topic',
-          'isRescheduled',
-          'diffReason',
-        ],
-        required: ['id', 'title', 'start', 'end', 'category'],
+        propertyOrdering: ['id', 'title', 'start', 'end', 'topic'],
+        required: ['id', 'title', 'start', 'end', 'topic'],
       },
     },
   },
-  propertyOrdering: ['aiRationale', 'diffs', 'revisedEvents'],
-  required: ['aiRationale', 'diffs', 'revisedEvents'],
+  propertyOrdering: ['aiRationale', 'diffs', 'rescheduledEvents', 'focusSprints'],
+  required: ['aiRationale', 'diffs', 'rescheduledEvents', 'focusSprints'],
 };
 
 export async function POST(req: Request) {
@@ -154,9 +150,12 @@ export async function POST(req: Request) {
   const chronotype = scheduleRecord.chronotype;
 
   // Build current schedule reference
-  const currentEvents = body.currentSchedule?.events || [];
+  const currentEvents: ScheduledEvent[] = body.currentSchedule?.events || [];
   const weekStart = body.currentSchedule?.weekStart || new Date().toISOString().slice(0, 10);
   const weekEnd = body.currentSchedule?.weekEnd || '';
+
+  // Extract flexible personal events that could be rescheduled if needed
+  const flexibleEvents = currentEvents.filter((e) => e.category === 'PERSONAL' && !e.title.toLowerCase().includes('lunch') && !e.title.toLowerCase().includes('rest'));
 
   const prompt = `You are the EduEye Principal Cognitive Scheduling AI.
 Your objective is to re-balance an engineering student's 7-day academic and personal schedule by incorporating the student's personal feedback while guaranteeing that their critical academic deficits are remediated during optimal mental alertness hours.
@@ -178,38 +177,33 @@ ${analytics.subjects
 
 CRITICAL DEFICIT SUBJECT: ${criticalSubject.name} (${criticalSubject.code})
 - Weak concepts: ${criticalSubject.conceptWeaknesses.join(', ')}
-- Trajectory: CAT2 dropped to ${criticalSubject.cat2Score}/${criticalSubject.maxCATScore}. Must receive priority remediation focus sprints!
+- Trajectory: CAT2 dropped to ${criticalSubject.cat2Score}/${criticalSubject.maxCATScore}. Must receive 3-4 priority remediation focus sprints!
 
 Upcoming High-Stakes Exams:
 ${scheduleRecord.upcomingExams
   .map((e) => `- ${e.subjectName} ${e.examType} on ${e.examDate} (Priority: ${e.priority})`)
   .join('\n')}
 
-Baseline Commitments (Fixed or Routine):
-- College Lectures: 09:30 - 13:00 (Mon to Fri) - Category: CLASS (Mandatory, DO NOT MOVE)
-- Lunch: 13:00 - 14:00 (Daily) - Category: PERSONAL (Mandatory break, DO NOT OVERWRITE)
+MANDATORY FIXED COMMITMENTS (DO NOT SCHEDULE STUDY DURING THESE TIMES):
+- College Lectures: 09:30 - 13:00 (Mon to Fri) - Category: CLASS
+- Lunch: 13:00 - 14:00 (Daily) - Category: PERSONAL
 - Rest / Sleep: 22:00 - 23:59 (Daily) - Category: PERSONAL
-- Flexible Activities: Gym (Mon/Wed/Fri 07:00-08:00), CS Study Group (Wed 17:00-18:30)
+
+FLEXIBLE PERSONAL EVENTS IN CURRENT SCHEDULE:
+${flexibleEvents.map((e) => `• id: "${e.id}", title: "${e.title}", current time: ${e.start} -> ${e.end}`).join('\n')}
 
 Current Planning Horizon:
 Week: ${weekStart} to ${weekEnd}
-
-CURRENT SCHEDULE SUMMARY (${currentEvents.length} events):
-${currentEvents
-  .slice(0, 30)
-  .map((e) => `• [${e.category}] ${e.title} (${e.start} -> ${e.end}) ${e.topic ? 'Topic: ' + e.topic : ''}`)
-  .join('\n')}
 
 --- STUDENT'S COMPLAINT / ADVICE / CONSTRAINTS ---
 "${studentFeedback || 'Please optimize my focus blocks for maximum retention before my upcoming exams and minimize fatigue.'}"
 
 --- SCHEDULING DIRECTIVES ---
-1. Address the student's specific feedback directly (e.g. if they mention sports, evening tiredness, preferred study hours, or shifting specific subjects, accommodate their request).
-2. DO NOT move or delete mandatory College Lecture blocks (09:30 - 13:00 on weekdays) or Lunch (13:00 - 14:00).
-3. Ensure the critical deficit subject ("${criticalSubject.name}") gets at least 3-4 high-priority Focus Sprint sessions ("REMEDIATION_LOCK", 60-90 min each) scheduled during the student's prime cognitive alertness hours.
-4. If shifting or rescheduling any flexible PERSONAL event (e.g. Gym, Study group) to accommodate study sessions or student preferences, record it explicitly in "diffs" with a clear human-readable reason.
-5. All dates in revisedEvents MUST be valid ISO-8601 strings in the 7-day period starting from ${weekStart}.
-6. Provide a concise, professional, encouraging "aiRationale" explaining the adjustments.
+1. Address the student's specific feedback directly (e.g. sports practice, shifting study to mornings, avoiding late evenings, etc.).
+2. Plan 4 to 6 focused study sprint blocks in "focusSprints" (60-90 min each) targeting the critical deficit subject ("${criticalSubject.name}") and other weak areas, placed in optimal cognitive alertness hours that do not clash with College (09:30-13:00) or Lunch (13:00-14:00).
+3. If any flexible personal event clashes with the student's requested preferences or ideal study slots, place its new time in "rescheduledEvents" and record it in "diffs".
+4. All datetime strings MUST be formatted as ISO-8601 strings (YYYY-MM-DDTHH:MM:SS) within the 7-day week starting ${weekStart}.
+5. Provide a clear, encouraging "aiRationale" explaining how the timetable was restructured.
 
 Return valid JSON adhering to the schema.`;
 
@@ -221,67 +215,95 @@ Return valid JSON adhering to the schema.`;
       config: {
         responseMimeType: 'application/json',
         responseJsonSchema: REBALANCE_SCHEMA,
-        temperature: 0.4,
+        temperature: 0.3,
         maxOutputTokens: 4096,
       },
     });
 
-    const text = response.text?.trim() || '{}';
+    let text = response.text?.trim() || '{}';
+    // Remove accidental markdown fences if returned
+    if (text.startsWith('```json')) {
+      text = text.slice(7);
+    }
+    if (text.endsWith('```')) {
+      text = text.slice(0, -3);
+    }
+    text = text.trim();
+
     const parsed = JSON.parse(text) as {
       aiRationale: string;
       diffs: ScheduleDiff[];
-      revisedEvents: Array<{
+      rescheduledEvents?: Array<{
+        id: string;
+        start: string;
+        end: string;
+        diffReason?: string;
+      }>;
+      focusSprints?: Array<{
         id: string;
         title: string;
         start: string;
         end: string;
-        category: 'CLASS' | 'PERSONAL' | 'REMEDIATION_LOCK';
         topic?: string;
-        isRescheduled?: boolean;
-        diffReason?: string;
       }>;
     };
 
-    // Post-process and ensure correct styling tokens adhering to 60-20-20 palette
-    const formattedEvents: ScheduledEvent[] = (parsed.revisedEvents || []).map((ev, idx) => {
+    // Deterministic merge with existing schedule:
+    // 1. Map rescheduled events
+    const rescheduledMap = new Map((parsed.rescheduledEvents || []).map((r) => [r.id, r]));
+
+    // 2. Keep baseline CLASS and PERSONAL events, updating any that moved
+    const updatedBaseEvents = currentEvents
+      .filter((e) => e.category !== 'REMEDIATION_LOCK')
+      .map((ev) => {
+        const resched = rescheduledMap.get(ev.id);
+        if (resched) {
+          return {
+            ...ev,
+            start: resched.start,
+            end: resched.end,
+            isRescheduled: true,
+            diffReason: resched.diffReason || 'Shifted by AI to accommodate preferences',
+            color: EVENT_COLORS.RESCHEDULED.bg,
+            textColor: EVENT_COLORS.RESCHEDULED.text,
+            borderColor: EVENT_COLORS.RESCHEDULED.border,
+          };
+        }
+        return ev;
+      });
+
+    // 3. Inject new focus sprints planned by Gemini
+    const newFocusEvents: ScheduledEvent[] = (parsed.focusSprints || []).map((sprint, idx) => {
       const isCritical =
-        ev.category === 'REMEDIATION_LOCK' &&
-        (ev.title.toLowerCase().includes(criticalSubject.name.toLowerCase()) ||
-          ev.topic?.toLowerCase().includes(criticalSubject.name.toLowerCase()));
+        sprint.title.toLowerCase().includes(criticalSubject.name.toLowerCase()) ||
+        sprint.topic?.toLowerCase().includes(criticalSubject.name.toLowerCase());
 
-      let colorToken = EVENT_COLORS[ev.category] || EVENT_COLORS.PERSONAL;
-      if (isCritical) {
-        colorToken = EVENT_COLORS.CRITICAL_FOCUS;
-      } else if (ev.isRescheduled) {
-        colorToken = EVENT_COLORS.RESCHEDULED;
-      }
+      const colors = isCritical ? EVENT_COLORS.CRITICAL_FOCUS : EVENT_COLORS.REMEDIATION_LOCK;
 
-      // Compute cognitive alertness score if not provided
-      const startHour = new Date(ev.start).getHours();
-      const startMin = new Date(ev.start).getMinutes();
+      const startHour = new Date(sprint.start).getHours();
+      const startMin = new Date(sprint.start).getMinutes();
       const minsFromMidnight = isNaN(startHour) ? 600 : startHour * 60 + startMin;
       const alertScore = getAlertnessScore(minsFromMidnight, chronotype);
 
       return {
-        id: ev.id || `rebalanced_${idx}`,
-        title: ev.title,
-        start: ev.start,
-        end: ev.end,
-        category: ev.category,
-        color: colorToken.bg,
-        textColor: colorToken.text,
-        borderColor: colorToken.border,
-        topic: ev.topic || null,
+        id: sprint.id || `sprint_gemini_${idx}`,
+        title: sprint.title,
+        start: sprint.start,
+        end: sprint.end,
+        category: 'REMEDIATION_LOCK',
+        color: colors.bg,
+        textColor: colors.text,
+        borderColor: colors.border,
+        topic: sprint.topic || criticalSubject.name,
         alertScore,
-        isRescheduled: !!ev.isRescheduled,
-        diffReason: ev.diffReason,
       };
     });
 
-    const focusCount = formattedEvents.filter((e) => e.category === 'REMEDIATION_LOCK').length;
+    const finalEvents = [...updatedBaseEvents, ...newFocusEvents];
+    const focusCount = finalEvents.filter((e) => e.category === 'REMEDIATION_LOCK').length;
 
     const result: AdaptiveScheduleResult = {
-      events: formattedEvents.length > 0 ? formattedEvents : currentEvents,
+      events: finalEvents,
       diffs: parsed.diffs || [],
       criticalSubject: criticalSubject.name,
       focusSlotsInjected: focusCount,
